@@ -88,7 +88,7 @@ namespace Wildtide.EditorTools
             if (pipeline == null)
             {
                 pipeline = UniversalRenderPipelineAsset.Create(renderer);
-                pipeline.shadowDistance = 45f;
+                pipeline.shadowDistance = 90f; // the isometric camera sits 40 units back from the player
                 pipeline.msaaSampleCount = 4;
                 AssetDatabase.CreateAsset(pipeline, pipelinePath);
             }

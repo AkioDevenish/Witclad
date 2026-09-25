@@ -25,7 +25,7 @@ You set this up once. It needs three accounts: Apple Developer, Unity (free), an
    If that ID is taken, use your own (for example `com.yourname.wildtide`), and in GitHub add a repository
    *variable* (not a secret) named `BUNDLE_ID` with that value.
 3. **Create the app record.** Go to <https://appstoreconnect.apple.com> → **Apps → + → New App**. Choose platform
-   **iOS**, name `Wildtide` (it must be unique on the App Store, so try `Wildtide RPG` if it's taken), and
+   **iOS**, name `Wildtide` (it must be unique on the App Store, so try `Wildtide Islands` if it's taken), and
    pick the bundle ID from step 2. Use `wildtide` as the SKU and **Full Access**.
 4. **Create an API key.** In App Store Connect, go to **Users and Access → Integrations → App Store Connect API →
    Team Keys → +**. Name it `GitHub`, set Access to **Admin**, then **Generate**.

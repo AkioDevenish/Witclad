@@ -13,244 +13,133 @@ static class Program
         else { failed++; Console.WriteLine("FAIL: " + what); }
     }
 
-    /// <summary>Plays back fixed values so a test controls every roll.</summary>
-    sealed class ScriptedRng : IRng
-    {
-        readonly float value;
-        public ScriptedRng(float value) { this.value = value; }
-        public int Range(int min, int max) => min + (int)((max - min) * value);
-        public float Value() => value;
-    }
-
     static int Main()
     {
-        DatabaseIsConsistent();
-        TypeChartTriangle();
-        StatsAndLevels();
-        DamageFormula();
-        BattleToVictory();
-        LosingSendsYouHome();
-        FaintForcesSwitch();
-        Capture();
-        RunAway();
-        Evolution();
-        SaveHelpers();
-        FullRandomBattles();
+        EveryLevelParses();
+        EveryLevelCanBeFinished();
+        TracksAreSensible();
+        ParserRejectsBadLevels();
+        SolverRespectsJumpLimits();
+        ProgressUnlocksInOrder();
         Console.WriteLine($"{passed} passed, {failed} failed");
         return failed == 0 ? 0 : 1;
     }
 
-    static void DatabaseIsConsistent()
+    static Level TryParse(LevelDef def)
     {
-        foreach (var s in Database.Species.Values)
+        try { return Level.Parse(def); }
+        catch (FormatException e) { Check(false, e.Message); return null; }
+    }
+
+    static void EveryLevelParses()
+    {
+        Check(Levels.All.Count >= 5, "at least five levels");
+        Check(Levels.All.Select(l => l.Id).Distinct().Count() == Levels.All.Count, "level ids are unique");
+        foreach (var def in Levels.All)
         {
-            foreach (var l in s.Learnset) Check(Database.Moves.ContainsKey(l.MoveId), $"{s.Id} learns unknown move {l.MoveId}");
-            if (s.EvolvesTo != null)
-            {
-                Check(Database.Species.ContainsKey(s.EvolvesTo), $"{s.Id} evolves into unknown {s.EvolvesTo}");
-                Check(s.EvolveLevel > 1, $"{s.Id} evolve level");
-            }
-            Check(s.CatchRate is >= 1 and <= 255, $"{s.Id} catch rate");
-            Check(Creature.Create(s.Id, 5).Moves.Count > 0, $"{s.Id} knows a move at level 5");
+            var level = TryParse(def);
+            if (level == null) continue;
+            Check(level.Pearls.Count >= 5, $"{def.Id}: has at least five pearls");
+            Check(!string.IsNullOrEmpty(def.Name) && !string.IsNullOrEmpty(def.Hint), $"{def.Id}: has a name and hint");
+            Check(level.Column(level.Start) >= 1, $"{def.Id}: start is on land");
         }
-        foreach (var slot in Database.WindmillMeadows) Check(Database.Species.ContainsKey(slot.SpeciesId), $"encounter {slot.SpeciesId}");
-        foreach (var id in Database.Starters) Check(Database.Species.ContainsKey(id), $"starter {id}");
-        Check(Database.Species.Count == 16, "16 species in the slice");
-        Check(Database.Lanterns.Count == 5, "five lantern tiers");
     }
 
-    static void TypeChartTriangle()
+    static void EveryLevelCanBeFinished()
     {
-        Check(TypeChart.Multiplier(Element.Flame, Element.Verdant) == 2f, "flame beats verdant");
-        Check(TypeChart.Multiplier(Element.Verdant, Element.Tide) == 2f, "verdant beats tide");
-        Check(TypeChart.Multiplier(Element.Tide, Element.Flame) == 2f, "tide beats flame");
-        Check(TypeChart.Multiplier(Element.Flame, Element.Tide) == 0.5f, "flame resisted by tide");
-        Check(TypeChart.Multiplier(Element.Storm, Element.Stone) == 0.5f, "storm resisted by stone");
-        Check(TypeChart.Multiplier(Element.Gale, Element.Flame) == 1f, "neutral");
-        Check(TypeChart.Multiplier(Element.Flame, Element.Verdant, Element.Venom) == 2f, "dual type neutral second");
-        Check(TypeChart.Multiplier(Element.Iron, Element.Frost, Element.Stone) == 4f, "dual weakness stacks");
-        foreach (Element a in Enum.GetValues(typeof(Element)))
-            foreach (Element d in Enum.GetValues(typeof(Element)))
-                Check(TypeChart.Multiplier(a, d) is 0.5f or 1f or 2f, $"{a} vs {d} in range");
-    }
-
-    static void StatsAndLevels()
-    {
-        var c = Creature.Create("cindlet", 5);
-        Check(c.Level == 5 && c.Xp == 125, "level 5 starts with 125 xp");
-        Check(c.Hp == c.MaxHp && c.MaxHp == 2 * 44 * 5 / 100 + 5 + 10, "hp formula");
-        Check(c.Knows("tackle") && c.Knows("ember") && !c.Knows("scale-flare"), "level 5 moves");
-        var log = c.GainXp(Creature.XpForLevel(7) - c.Xp);
-        Check(c.Level == 7, "levels twice");
-        Check(log.Count(l => l.Contains("grew to level")) == 2, "two level-up lines");
-        var high = Creature.Create("cindlet", 14);
-        Check(high.Moves.Count == 4 && high.Knows("scale-flare") && !high.Knows("tackle"), "oldest move replaced");
-        Check(Creature.Create("cindlet", 500).Level == 100, "level clamps");
-    }
-
-    static void DamageFormula()
-    {
-        var narlet = new Battler(Creature.Create("narlet", 10));
-        var cindlet = new Battler(Creature.Create("cindlet", 10));
-        var bubble = Database.GetMove("bubble");
-        int super = Battle.Damage(narlet, cindlet, bubble, false, 2f, 1f);
-        int neutral = Battle.Damage(narlet, cindlet, bubble, false, 1f, 1f);
-        Check(super > neutral, "super effective hits harder");
-        int crit = Battle.Damage(narlet, cindlet, bubble, true, 1f, 1f);
-        Check(crit > neutral, "crit hits harder");
-        int tackle = Battle.Damage(narlet, cindlet, Database.GetMove("tackle"), false, 1f, 1f);
-        Check(neutral > tackle, "same-element bonus applies");
-        cindlet.ChangeStage(Stat.SpDefense, 2);
-        Check(Battle.Damage(narlet, cindlet, bubble, false, 1f, 1f) < neutral, "defence stage reduces damage");
-        Check(cindlet.ChangeStage(Stat.SpDefense, 10) == 4 && cindlet.Stage(Stat.SpDefense) == 6, "stage clamps at +6");
-    }
-
-    static SaveData SaveWith(params Creature[] party)
-    {
-        var s = SaveData.NewGame();
-        s.Party.AddRange(party);
-        return s;
-    }
-
-    static void BattleToVictory()
-    {
-        var save = SaveWith(Creature.Create("narlet", 20));
-        var wild = Creature.Create("kilnpup", 2);
-        var battle = new Battle(save, wild, new ScriptedRng(0.5f));
-        Check(battle.Start().Count == 2, "start events");
-        Check(save.SeenSpecies.Contains("kilnpup"), "marked seen");
-        int xpBefore = save.Party[0].Xp;
-        List<BattleEvent> ev = null;
-        for (int i = 0; i < 10 && battle.Outcome == BattleOutcome.Ongoing; i++)
-            ev = battle.ChooseMove(save.Party[0].Moves.FindIndex(m => m.Data.Power > 0));
-        Check(battle.Outcome == BattleOutcome.Won, "strong lead wins");
-        Check(save.Party[0].Xp > xpBefore, "xp awarded");
-        Check(ev.Last().Kind == BattleEventKind.End, "ends with End");
-        Check(ev.Any(e => e.Kind == BattleEventKind.Faint && !e.PlayerSide), "wild faint event");
-        Check(battle.ChooseMove(0).Count == 0, "no actions after the end");
-    }
-
-    static void LosingSendsYouHome()
-    {
-        var save = SaveWith(Creature.Create("budbara", 2));
-        var battle = new Battle(save, Creature.Create("kilnpup", 30), new SystemRng(7));
-        for (int i = 0; i < 200 && battle.Outcome == BattleOutcome.Ongoing; i++) battle.ChooseMove(0);
-        Check(battle.Outcome == BattleOutcome.Lost, "weak lead loses");
-        Check(save.AllFainted, "all fainted");
-    }
-
-    static void FaintForcesSwitch()
-    {
-        var save = SaveWith(Creature.Create("budbara", 2), Creature.Create("narlet", 40));
-        var battle = new Battle(save, Creature.Create("kilnpup", 25), new SystemRng(7));
-        for (int i = 0; i < 200 && !battle.MustSwitch && battle.Outcome == BattleOutcome.Ongoing; i++) battle.ChooseMove(0);
-        Check(battle.MustSwitch, "must switch after faint");
-        Check(battle.ChooseMove(0).Count == 0, "can't attack while a switch is pending");
-        var ev = battle.ChooseSwitch(1);
-        Check(!battle.MustSwitch && battle.Player.Creature == save.Party[1], "switched in");
-        Check(ev.Count == 1, "forced switch gives the wild creature no free turn");
-    }
-
-    static void Capture()
-    {
-        var weak = Creature.Create("capfrog", 3);
-        weak.Hp = 1;
-        var full = Creature.Create("capfrog", 3);
-        var tin = Database.Lanterns["tin"];
-        Check(CaptureMath.Probability(weak, tin) > CaptureMath.Probability(full, tin), "low hp is easier");
-        Check(CaptureMath.Probability(full, Database.Lanterns["filigree"]) > CaptureMath.Probability(full, tin), "better lantern is easier");
-        var legend = Creature.Create("veyrath", 50);
-        Check(CaptureMath.Probability(legend, tin) < 0.2, "legendaries are hard");
-        Check(CaptureMath.Attempt(legend, Database.Lanterns["star"], new ScriptedRng(0.99f)).caught, "star lantern always works");
-
-        var save = SaveWith(Creature.Create("narlet", 5));
-        var battle = new Battle(save, weak, new ScriptedRng(0.0f));
-        var ev = battle.ChooseLantern("tin");
-        Check(battle.Outcome == BattleOutcome.Captured, "captured with a low roll");
-        Check(save.Party.Count == 2 && save.CaughtSpecies.Contains("capfrog"), "joins the party");
-        Check(save.LanternCount("tin") == 9, "lantern used up");
-        Check(ev.Count(e => e.Kind == BattleEventKind.CaptureShake) == 3, "three shakes");
-
-        var save2 = SaveWith(Creature.Create("narlet", 5));
-        var miss = new Battle(save2, Creature.Create("rimehare", 5), new ScriptedRng(0.999f));
-        miss.ChooseLantern("tin");
-        Check(miss.Outcome == BattleOutcome.Ongoing, "high roll breaks free");
-        var none = new Battle(save2, Creature.Create("rimehare", 5), new ScriptedRng(0.5f)).ChooseLantern("star");
-        Check(none.Count == 1 && none[0].Text.Contains("don't have"), "can't throw what you don't have");
-
-        var fullParty = SaveWith(Enumerable.Range(0, 6).Select(_ => Creature.Create("geodig", 5)).ToArray());
-        Check(!fullParty.AddCaught(Creature.Create("capfrog", 3)) && fullParty.Storage.Count == 1, "overflow goes to storage");
-    }
-
-    static void RunAway()
-    {
-        var save = SaveWith(Creature.Create("rimehare", 10));
-        var fast = new Battle(save, Creature.Create("geodig", 3), new ScriptedRng(0.99f));
-        fast.ChooseRun();
-        Check(fast.Outcome == BattleOutcome.Ran, "faster creature always escapes");
-        var slowSave = SaveWith(Creature.Create("geodig", 3));
-        var slow = new Battle(slowSave, Creature.Create("rimehare", 10), new ScriptedRng(0.99f));
-        slow.ChooseRun();
-        Check(slow.Outcome != BattleOutcome.Ran, "slow creature can fail to escape");
-    }
-
-    static void Evolution()
-    {
-        var c = Creature.Create("cindlet", 15);
-        Check(!c.CanEvolve, "not yet");
-        c.GainXp(Creature.XpForLevel(16) - c.Xp);
-        Check(c.CanEvolve, "can evolve at 16");
-        c.Hp = c.MaxHp / 2;
-        string old = c.Evolve();
-        Check(old == "Cindlet" && c.SpeciesId == "scorchscale", "evolved");
-        Check(Math.Abs((float)c.Hp / c.MaxHp - 0.5f) < 0.05f, "keeps hp share");
-        Check(c.Knows("ember"), "keeps moves");
-    }
-
-    static void SaveHelpers()
-    {
-        var s = SaveData.NewGame();
-        Check(!s.HasStarter && s.LanternCount("tin") == 10, "new game");
-        s.AddLanterns("tin", 2);
-        s.AddLanterns("brass", 1);
-        Check(s.LanternCount("tin") == 12 && s.LanternCount("brass") == 1, "stacks");
-        var c = Creature.Create("budbara", 5);
-        c.Hp = 0;
-        c.Moves[0].Pp = 0;
-        s.Party.Add(c);
-        s.HealParty();
-        Check(c.Hp == c.MaxHp && c.Moves[0].Pp == c.Moves[0].Data.MaxPp, "heal restores hp and pp");
-    }
-
-    /// <summary>Hundreds of random battles must always finish without exceptions.</summary>
-    static void FullRandomBattles()
-    {
-        var rng = new SystemRng(1234);
-        var outcomes = new Dictionary<BattleOutcome, int>();
-        for (int n = 0; n < 500; n++)
+        foreach (var def in Levels.All)
         {
-            var save = SaveWith(Creature.Create(Database.Starters[n % 3], 5), Creature.Create("geodig", 4));
-            var slot = Database.Roll(Database.WindmillMeadows, rng);
-            var battle = new Battle(save, Creature.Create(slot.SpeciesId, rng.Range(slot.MinLevel, slot.MaxLevel + 1)), rng);
-            battle.Start();
-            int turns = 0;
-            while (battle.Outcome == BattleOutcome.Ongoing && turns++ < 200)
-            {
-                if (battle.MustSwitch) { battle.ChooseSwitch(save.Party.FindIndex(c => !c.Fainted)); continue; }
-                int action = rng.Range(0, 10);
-                if (action < 7)
-                {
-                    var moves = battle.Player.Creature.Moves;
-                    int pick = moves.FindIndex(m => m.Pp > 0);
-                    if (pick < 0) { battle.ChooseRun(); continue; }
-                    battle.ChooseMove(pick);
-                }
-                else if (action < 9) battle.ChooseLantern("tin");
-                else battle.ChooseRun();
-            }
-            Check(battle.Outcome != BattleOutcome.Ongoing, $"battle {n} finished");
-            outcomes[battle.Outcome] = outcomes.GetValueOrDefault(battle.Outcome) + 1;
+            var level = TryParse(def);
+            if (level == null) continue;
+            var reach = Reach.Solve(level);
+            Check(reach.Contains(level.Goal), $"{def.Id}: goal {level.Goal} is reachable");
+            foreach (var p in level.Pearls) Check(reach.Contains(p), $"{def.Id}: pearl {p} is reachable");
+            foreach (var c in level.Checkpoints) Check(reach.Contains(c), $"{def.Id}: checkpoint {c} is reachable");
+            foreach (var c in level.Crumbles) Check(reach.Contains(c), $"{def.Id}: crumbling stone {c} is reachable");
+            foreach (var b in level.Bouncers) Check(reach.Contains(b), $"{def.Id}: bounce pad {b} is reachable");
         }
-        Console.WriteLine("500 random battles: " + string.Join(", ", outcomes.Select(kv => $"{kv.Key} {kv.Value}")));
+    }
+
+    static void TracksAreSensible()
+    {
+        foreach (var def in Levels.All)
+        {
+            var level = TryParse(def);
+            if (level == null) continue;
+            foreach (var m in level.Movers)
+            {
+                Check(m.To - m.From >= 2, $"{def.Id}: raft at {m.Cell} drifts at least two cells");
+                // Each end must touch land (or another platform) so the player can get on and off.
+                Check(Reach.Standing(level, EndBeyond(m, m.From, -1)) >= 0, $"{def.Id}: raft at {m.Cell} starts next to land");
+                Check(Reach.Standing(level, EndBeyond(m, m.To, 1)) >= 0, $"{def.Id}: raft at {m.Cell} ends next to land");
+            }
+            foreach (var c in level.Crabs)
+            {
+                Check(c.To - c.From >= 1, $"{def.Id}: crab at {c.Cell} has room to walk");
+                Check(!c.Cell.Equals(level.Start), $"{def.Id}: no crab on the start");
+            }
+        }
+    }
+
+    static Cell EndBeyond(Track t, int along, int direction)
+    {
+        return t.Axis == Axis.X ? new Cell(along + direction, t.Cell.Z) : new Cell(t.Cell.X, along + direction);
+    }
+
+    static void ParserRejectsBadLevels()
+    {
+        void Rejects(string what, string[] heights, string[] things)
+        {
+            try
+            {
+                Level.Parse(new LevelDef { Id = "bad", Name = "Bad", Hint = "-", Heights = heights, Things = things });
+                Check(false, "rejects " + what);
+            }
+            catch (FormatException) { Check(true, "rejects " + what); }
+        }
+        Rejects("no goal", new[] { "11" }, new[] { "S." });
+        Rejects("two starts", new[] { "111" }, new[] { "SSG" });
+        Rejects("ragged rows", new[] { "111", "11" }, new[] { "S.G", ".." });
+        Rejects("row count mismatch", new[] { "111", "111" }, new[] { "S.G" });
+        Rejects("pearl over the sea", new[] { "1.1" }, new[] { "SoG" });
+        Rejects("unknown height", new[] { "1a1" }, new[] { "S.G" });
+        Rejects("unknown thing", new[] { "111" }, new[] { "S?G" });
+        Rejects("raft with no sea", new[] { "121" }, new[] { "SxG" });
+    }
+
+    static void SolverRespectsJumpLimits()
+    {
+        bool Reaches(string heights, string things)
+        {
+            var level = Level.Parse(new LevelDef { Id = "t", Name = "t", Hint = "t", Heights = new[] { heights }, Things = new[] { things } });
+            return Reach.Solve(level).Contains(level.Goal);
+        }
+        Check(Reaches("13", "SG"), "climbs two steps");
+        Check(!Reaches("14", "SG"), "can't climb three steps");
+        Check(Reaches("1.2", "S.G"), "one-cell gap, one step up");
+        Check(!Reaches("1.3", "S.G"), "one-cell gap, two steps up is too much");
+        Check(Reaches("1..1", "S..G"), "two-cell gap on the level");
+        Check(!Reaches("1...1", "S...G"), "three-cell gap is too far");
+        Check(Reaches("117", "SbG"), "bounce pad climbs six steps");
+        Check(Reaches("111", "S^G"), "hops over spikes");
+        Check(!Reaches("17", "SG"), "no bounce pad, no big climb");
+        Check(!Reaches("151", "S.G"), "a wall blocks the way");
+        Check(Reaches("1.2..1", "S.x..G"), "rides a raft across");
+    }
+
+    static void ProgressUnlocksInOrder()
+    {
+        var p = new Progress();
+        Check(p.IsUnlocked(0), "first level open");
+        Check(!p.IsUnlocked(1), "second level locked");
+        Check(p.RecordClear(Levels.All[0].Id, 3, 50f), "first clear is a best time");
+        Check(p.IsUnlocked(1), "clearing opens the next level");
+        Check(!p.RecordClear(Levels.All[0].Id, 7, 60f), "slower clear is not a best time");
+        var r = p.Get(Levels.All[0].Id);
+        Check(r.BestPearls == 7 && Math.Abs(r.BestTime - 50f) < 0.001f, "keeps best pearls and time separately");
+        Check(p.RecordClear(Levels.All[0].Id, 1, 40f) && r.BestPearls == 7, "faster clear keeps pearl best");
+        Check(p.TotalPearls() == 7, "total pearls");
+        Check(!p.IsUnlocked(Levels.All.Count), "no level past the end");
+        Check(Progress.FormatTime(75.46f) == "1:15.4", "time format " + Progress.FormatTime(75.46f));
     }
 }

@@ -1,26 +1,21 @@
 # Wildtide (Unity)
 
-The playable vertical slice for iOS and Android: pick a starter, explore Brightcove and Windmill Meadows,
-meet wild creatures in the tall grass, battle them and bond them with lanterns. It saves automatically
-and plays in landscape with touch controls.
+A 3D isometric platformer for iOS and Android: hop across five islands rising out of the sea, gather pearls,
+bop crabs, ride drifting rafts and reach the golden shell at the end of each island. It saves your best
+pearls and times, and plays in landscape with touch controls.
 
-Everything uses placeholder shapes until you drop in art from the Hugging Face pipeline
-(see **Adding art** below).
+Everything is built from coloured shapes in code, so there are no art files to import.
 
-## What's in the slice
+## What's in it
 
-- **16 creatures:** the three starter lines (Cindlet, Narlet and Budbara, each evolving at levels 16 and 36),
-  six route creatures and the legendary Veyrath. All 12 elements have a strengths and weaknesses chart.
-- **Turn-based battles:** Fight, Bag, Team and Run. Damage uses element matchups, same-element bonus,
-  critical hits and stat stages.
-- **Capture:** five Bond Lantern tiers, from Tin to Star. Lower HP and better lanterns give better odds,
-  and the lantern wobbles up to three times.
-- **Progression:** XP and level-ups, new moves as creatures grow, evolution after battles, and a full team
-  of six with extras going to storage.
-- **The world:** Brightcove (Hearth House healing, lab, harbor) and Windmill Meadows (five tall-grass patches,
-  windmill, pond). Your lead creature follows you around.
-- **Phone support:** a floating thumbstick, safe-area layout for the iPhone notch, 60 fps, and saves when the app
-  is sent to the background. Android's back button closes menus.
+- **Five islands**, each teaching something new: Shell Beach (running and jumping), Crab Cove (bopping crabs,
+  bounce pads), Drift Bridge (moving rafts), Urchin Cliffs (crumbling stones, spikes) and Lighthouse Rise (all of it).
+- **Platforming that forgives you:** a short grace window after running off a ledge, jump presses buffered just
+  before landing, and a tap for a hop or a hold for a full jump. A shadow under the player shows where you'll land.
+- **Checkpoints and a timer:** falling in the sea sends you back to the last flag. Clearing an island opens the next
+  one, and the island list shows your best pearls and time.
+- **Phone support:** a floating thumbstick on the left, a big jump button on the right, safe-area layout for the
+  iPhone notch, 60 fps. Android's back button (Esc in the editor) returns to the island list.
 
 ## Open it
 
@@ -31,10 +26,10 @@ Everything uses placeholder shapes until you drop in art from the Hugging Face p
 3. On first open the project sets itself up: landscape orientation, bundle id `com.witclad.wildtide`,
    IL2CPP/ARM64 for Android, iOS 15+, URP and the toon shader, and `Assets/Scenes/Main.unity`.
    You can re-run it from **Wildtide → Set Up Project for iOS + Android**.
-4. Press **Play**. Use WASD or the arrow keys in the editor, and click to advance text.
+4. Press **Play**. In the editor, move with WASD or the arrow keys and jump with Space.
    Use **Wildtide → Delete Save** to start over.
 
-The scene is empty on purpose: `GameRoot` builds the world, UI and cameras from code, so there's nothing to wire up.
+The scene is empty on purpose: `GameRoot` builds the islands, UI and camera from code, so there's nothing to wire up.
 
 ## Run it on your iPhone
 
@@ -65,34 +60,34 @@ The scene is empty on purpose: `GameRoot` builds the world, UI and cameras from 
 3. **Build And Run**. For the Play Store, tick **Build App Bundle (.aab)** and set up a keystore under
    Player Settings → Publishing Settings.
 
-## Adding art
+## Making islands
 
-The game looks for art by the prompt id from `prompts/prompts.json` (for example `cindlet-stage-1`):
+Islands are text in `Assets/Wildtide/Core/Levels.cs`: two grids of the same size, north at the top.
+`Heights` gives each cell's column height (`1`-`9` steps, `.` is sea); `Things` puts something on top of it:
 
-1. `Resources/Creatures/<id>`: a 3D model. Import `.glb` files with the glTFast package
-   (Package Manager → add by name → `com.unity.cloud.gltfast`).
-2. `Resources/Concepts/<id>.png`: a concept image, shown as a camera-facing billboard. It also
-   appears on the starter pick screen. Use a transparent cutout.
-3. Otherwise, a coloured placeholder.
+| Char | Thing |
+|---|---|
+| `S` / `G` | Start / golden shell (goal) |
+| `o` | Pearl |
+| `c` | Checkpoint flag |
+| `^` | Sea-urchin spikes |
+| `b` | Bounce pad (launches six steps up) |
+| `e` / `E` | Crab walking east-west / north-south along flat ground |
+| `x` / `z` | Raft drifting east-west / north-south across the open sea (its `Heights` digit is the raft's height) |
+| `f` | Crumbling stone (its `Heights` digit is the stone's height) |
 
-From the repo root, the pipeline copies files in for you:
-
-```bash
-python -m wildtide cutout assets/creatures/cindlet-stage-1/concept_02.png
-python -m wildtide unity cindlet-stage-1 assets/creatures/cindlet-stage-1/concept_02_cutout.png
-python -m wildtide unity cindlet-stage-1 assets/sheets/cindlet/clean-view-for-3d-model.glb
-```
+The player can climb 2 steps onto the next cell, jump a 1-cell gap going up 1 step, or a 2-cell gap on the level.
+The tests (below) check every island with those limits, so a level you can't finish fails the build.
 
 ## Code layout
 
 | Folder | What's there |
 |---|---|
-| `Assets/Wildtide/Core` | Game rules with no Unity dependency: elements, species, moves, battle, capture, XP and save data. |
-| `Assets/Wildtide/Runtime` | Unity side: `GameRoot` (flow and saving), `World` (greybox map), `Overworld` (player, camera, encounters), `BattleController`, `Visuals`. |
-| `Assets/Wildtide/Runtime/UI` | uGUI built in code: battle screen, team panel, starter pick, joystick and dialog. |
+| `Assets/Wildtide/Core` | Rules with no Unity dependency: the level format and parser, the islands, a solver that proves each one can be finished, and saved progress. |
+| `Assets/Wildtide/Runtime` | Unity side: `GameRoot` (flow and saving), `Stage` (builds an island and runs pickups, hazards and the goal, plus rafts, crabs, crumbling stones and bounce pads), `Player` (the character controller and isometric camera). |
+| `Assets/Wildtide/Runtime/UI` | uGUI built in code: HUD with thumbstick and jump button, island select, cleared panel. |
 | `Assets/Wildtide/Resources/Shaders` | `Wildtide/Toon`, the single cel shader for everything (URP, with a Built-in fallback). |
 | `Assets/Wildtide/Editor` | First-open project setup for iOS and Android. |
-| `Tests~/CoreTests` | Tests for the Core rules, including 500 random full battles. Run with `dotnet run` (Unity ignores this folder). |
+| `Tests~/CoreTests` | Tests for the Core rules, including that every island can be finished. Run with `dotnet run` (Unity ignores this folder). |
 
-Balance numbers live in `Core/Database.cs`. Add species, moves and encounter tables there, and the tests check
-that every reference resolves.
+Jump tuning lives in `Runtime/Player.cs` (`JumpHeight`, `RunSpeed`, `Gravity`) and must keep up with `Moves.Rise` in `Core/Reach.cs`.

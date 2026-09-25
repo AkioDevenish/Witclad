@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using Wildtide.Core;
@@ -8,26 +7,21 @@ using Wildtide.UI;
 namespace Wildtide
 {
     /// <summary>
-    /// Boots the vertical slice in any scene: builds the world, player, cameras and UI from code, then runs the
-    /// loop of starter pick → overworld → wild battle → back. No scene setup required; press Play.
+    /// Boots the game in any scene: builds the sea, light, camera, player and UI from code, then runs the loop of
+    /// island select → play → cleared → next island. No scene setup required; press Play.
     /// </summary>
     public sealed class GameRoot : MonoBehaviour
     {
         public static GameRoot Instance { get; private set; }
 
-        public SaveData Save { get; private set; }
-        readonly IRng rng = new SystemRng();
-        readonly EncounterRoller encounters = new EncounterRoller();
-
-        World world;
+        Progress progress;
         PlayerController player;
-        FollowCamera overworldCamera;
-        CreatureFollower follower;
-        string followerSpecies;
+        IsoCamera cam;
         Hud hud;
-        BattleController battle;
-        Light sun;
-        bool wasInHearth;
+        MenuScreen menu;
+        ClearedPanel cleared;
+        Stage stage;
+        int levelIndex;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Boot()
@@ -43,191 +37,112 @@ namespace Wildtide
             QualitySettings.vSyncCount = 0;
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Input.multiTouchEnabled = true;
+            // Rafts move their colliders in Update; keep physics in step so the player never sinks into one.
+            Physics.autoSyncTransforms = true;
 
-            Save = SaveSystem.Load() ?? SaveData.NewGame();
+            progress = SaveSystem.Load() ?? new Progress();
             BuildScene();
 
-            if (Save.HasStarter) EnterOverworld();
-            else ShowStarterSelect();
+            // Open on the first island not yet cleared, behind the menu.
+            levelIndex = 0;
+            while (levelIndex + 1 < Levels.All.Count && progress.IsUnlocked(levelIndex + 1)) levelIndex++;
+            LoadLevel(levelIndex);
+            ShowMenu();
         }
 
         void BuildScene()
         {
-            // Warm key light; the toon shader turns it into two clean bands with a cool rim.
-            sun = new GameObject("Sun").AddComponent<Light>();
+            var sun = new GameObject("Sun").AddComponent<Light>();
             sun.type = LightType.Directional;
             sun.color = new Color(1f, 0.95f, 0.86f);
             sun.intensity = 1.15f;
             sun.shadows = LightShadows.Soft;
-            sun.transform.rotation = Quaternion.Euler(52f, -35f, 0f);
+            sun.transform.rotation = Quaternion.Euler(58f, 20f, 0f);
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
             RenderSettings.ambientLight = new Color(0.55f, 0.62f, 0.75f);
 
-            world = World.Build();
-            var spawn = Save.HasPosition ? new Vector3(Save.PosX, Save.PosY, Save.PosZ) : world.NewGameSpawn;
-            player = PlayerController.Create(spawn);
-            overworldCamera = FollowCamera.Create();
-            overworldCamera.Target = player.transform;
-            overworldCamera.Snap();
+            var sea = Shapes.Make(PrimitiveType.Plane, null, Vector3.zero, new Vector3(60f, 1f, 60f), Materials.Hex(0x3FA7D6FF), name: "Sea");
+            sea.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            player = PlayerController.Create();
+            cam = IsoCamera.Create();
+            cam.Target = player.transform;
+            player.CameraYaw = IsoCamera.Yaw;
 
             hud = Hud.Create();
-            hud.Party.Bind(Save);
-            hud.Party.Changed = () => { RefreshFollower(); Persist(); };
+            hud.MenuPressed = ShowMenu;
             player.Joystick = hud.Joystick;
+            player.JumpButton = hud.Jump;
 
-            battle = BattleController.Create(BattleScreen.Create());
-            battle.Finished += OnBattleFinished;
+            menu = MenuScreen.Create();
+            menu.Chosen = Play;
+
+            cleared = ClearedPanel.Create();
+            cleared.Menu = () => { cleared.Hide(); ShowMenu(); };
+            cleared.Next = () => { cleared.Hide(); Play(levelIndex + 1); };
         }
 
-        // ---- flow ---------------------------------------------------------------------------------
-
-        void ShowStarterSelect()
+        void LoadLevel(int index)
         {
-            hud.SetVisible(false);
-            player.InputEnabled = false;
-            var screen = StarterScreen.Create();
-            screen.Chosen = id =>
-            {
-                Destroy(screen.gameObject);
-                var starter = Creature.Create(id, 5);
-                Save.AddCaught(starter);
-                Persist();
-                EnterOverworld();
-                hud.Dialog.Show($"Oma Rell: {starter.Name} has taken a shine to you! The tall grass north of town is full of wild creatures. Take these Tin Lanterns and go make some friends.");
-            };
+            if (stage != null) Destroy(stage.gameObject);
+            levelIndex = Mathf.Clamp(index, 0, Levels.All.Count - 1);
+            stage = Stage.Create(Level.Parse(Levels.All[levelIndex]), player, cam);
+            stage.Cleared += OnCleared;
+            stage.Fell += hud.Flash;
+            player.Teleport(stage.StartPosition);
+            cam.Snap();
         }
 
-        void EnterOverworld()
+        void Play(int index)
         {
+            if (!progress.IsUnlocked(index)) return;
+            LoadLevel(index);
+            menu.Hide();
+            cleared.Hide();
             hud.SetVisible(true);
+            hud.Toast(stage.Level.Def.Hint, 5f);
+            stage.Running = true;
             player.InputEnabled = true;
-            overworldCamera.GetComponent<Camera>().enabled = true;
-            RefreshFollower();
-            encounters.StartGrace();
-            wasInHearth = world.HearthDoor.Contains(player.transform.position);
+        }
+
+        void ShowMenu()
+        {
+            if (stage != null) stage.Running = false;
+            player.InputEnabled = false;
+            hud.SetVisible(false);
+            cleared.Hide();
+            menu.Show(progress);
+        }
+
+        void OnCleared(StageResult r)
+        {
+            bool best = progress.RecordClear(r.Level.Id, r.Pearls, r.Seconds);
+            SaveSystem.Write(progress);
+            hud.SetVisible(false);
+            cleared.Show(r, best, levelIndex + 1 < Levels.All.Count);
         }
 
         void Update()
         {
-            if (battle.Running || !player.InputEnabled) return;
-            bool blocked = hud.Blocking;
-            player.enabled = !blocked;
-            if (blocked) return;
-
-            bool inHearth = world.HearthDoor.Contains(player.transform.position);
-            if (inHearth && !wasInHearth)
-            {
-                Save.HealParty();
-                Persist();
-                hud.Dialog.Show("Welcome to the Hearth House! Your team is rested and ready. We hope to see you again!");
-            }
-            wasInHearth = inHearth;
-
-            if (encounters.Step(world, player.transform.position, player.MovedThisFrame, rng)) StartWildBattle();
-        }
-
-        void StartWildBattle()
-        {
-            if (Save.Lead == null) return; // everyone fainted: walk to the Hearth House
-            var slot = Database.Roll(Database.WindmillMeadows, rng);
-            var wild = Creature.Create(slot.SpeciesId, rng.Range(slot.MinLevel, slot.MaxLevel + 1));
-            hud.SetVisible(false);
-            player.InputEnabled = false;
-            overworldCamera.GetComponent<Camera>().enabled = false;
-            if (follower != null) follower.gameObject.SetActive(false);
-            battle.Begin(Save, wild, rng);
-        }
-
-        void OnBattleFinished(BattleOutcome outcome)
-        {
-            if (follower != null) follower.gameObject.SetActive(true);
-            if (outcome == BattleOutcome.Lost)
-            {
-                Save.HealParty();
-                player.Teleport(world.HearthSpawn);
-                overworldCamera.Snap();
-            }
-            EnterOverworld();
-            var lines = new List<string>();
-            if (outcome == BattleOutcome.Lost) lines.Add("You rushed back to the Hearth House. Your team has been restored.");
-            foreach (var c in Save.Party)
-            {
-                while (c.CanEvolve)
-                {
-                    string before = c.Evolve();
-                    lines.Add($"What? {before} is evolving!\n...{before} became {c.Species.Name}!");
-                }
-            }
-            RefreshFollower();
-            Persist();
-            ShowLines(lines, 0);
-        }
-
-        void ShowLines(List<string> lines, int index)
-        {
-            if (index >= lines.Count) return;
-            hud.Dialog.Show(lines[index], () => ShowLines(lines, index + 1));
-        }
-
-        void RefreshFollower()
-        {
-            var lead = Save.Party.Count > 0 ? Save.Party[0] : null;
-            if (lead == null)
-            {
-                if (follower != null) Destroy(follower.gameObject);
-                follower = null;
-                followerSpecies = null;
-                return;
-            }
-            if (follower != null && followerSpecies == lead.SpeciesId) return;
-            Vector3 at = follower != null ? follower.transform.position : player.transform.position - Vector3.forward * 1.5f;
-            if (follower != null) Destroy(follower.gameObject);
-            var view = CreatureView.Build(lead.Species, null, maxScale: 1.2f);
-            view.transform.position = at;
-            follower = view.AddComponent<CreatureFollower>();
-            follower.Target = player.transform;
-            followerSpecies = lead.SpeciesId;
-        }
-
-        // ---- saving -------------------------------------------------------------------------------
-
-        void Persist()
-        {
-            if (Save == null || player == null) return;
-            var p = player.transform.position;
-            Save.PosX = p.x;
-            Save.PosY = p.y;
-            Save.PosZ = p.z;
-            Save.HasPosition = Save.HasStarter;
-            SaveSystem.Write(Save);
-        }
-
-        // Phones kill backgrounded apps without warning, so save whenever we lose focus.
-        void OnApplicationPause(bool paused)
-        {
-            if (paused && !battle.Running) Persist();
-        }
-
-        void OnApplicationQuit()
-        {
-            if (!battle.Running) Persist();
+            if (stage != null && hud.isActiveAndEnabled) hud.Show(stage);
+            // Android back button (and Esc in the editor) goes back to the island list.
+            if (Input.GetKeyDown(KeyCode.Escape) && !menu.Open) ShowMenu();
         }
     }
 
     public static class SaveSystem
     {
-        public static string FilePath => Path.Combine(Application.persistentDataPath, "wildtide-save.json");
+        public static string FilePath => Path.Combine(Application.persistentDataPath, "wildtide-islands.json");
 
-        public static SaveData Load()
+        public static Progress Load()
         {
             try
             {
                 if (!File.Exists(FilePath)) return null;
-                var data = JsonUtility.FromJson<SaveData>(File.ReadAllText(FilePath));
-                // Drop anything that no longer exists in the database (renamed or removed content).
-                data.Party.RemoveAll(c => c == null || !Database.Species.ContainsKey(c.SpeciesId));
-                data.Storage.RemoveAll(c => c == null || !Database.Species.ContainsKey(c.SpeciesId));
-                foreach (var c in data.Party) c.Moves.RemoveAll(m => !Database.Moves.ContainsKey(m.MoveId));
+                var data = JsonUtility.FromJson<Progress>(File.ReadAllText(FilePath));
+                if (data == null) return null;
+                if (data.Records == null) data.Records = new System.Collections.Generic.List<LevelRecord>();
+                data.Records.RemoveAll(r => r == null || Levels.IndexOf(r.Id) < 0); // islands renamed or removed
                 return data;
             }
             catch (Exception e)
@@ -238,7 +153,7 @@ namespace Wildtide
             }
         }
 
-        public static void Write(SaveData data)
+        public static void Write(Progress data)
         {
             try
             {
@@ -255,7 +170,7 @@ namespace Wildtide
         }
 
 #if UNITY_EDITOR
-        [UnityEditor.MenuItem("Wildtide/Delete Save (start a new game)")]
+        [UnityEditor.MenuItem("Wildtide/Delete Save (start over)")]
         static void DeleteSave()
         {
             if (File.Exists(FilePath)) File.Delete(FilePath);

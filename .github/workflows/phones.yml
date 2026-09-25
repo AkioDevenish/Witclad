@@ -6,7 +6,7 @@ name: Build for phones
 
 on:
   push:
-    branches: [claude/tender-davinci-g1tzk1, main]
+    branches: [claude/tender-davinci-g1tzk1, claude/bold-curie-0aqljk, main]
     paths: ["unity/**", ".github/workflows/phones.yml"]
   workflow_dispatch:
     inputs:

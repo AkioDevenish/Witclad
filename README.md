@@ -1,7 +1,8 @@
 # Wildtide on Hugging Face
 
-> **The game lives in [`unity/Wildtide`](unity/Wildtide/README.md):** a Unity 6 vertical slice for iOS and Android.
-> This page covers the art pipeline that feeds it.
+> **The game lives in [`unity/Wildtide`](unity/Wildtide/README.md):** a Unity 6 isometric platformer for iOS and Android.
+> This page covers the Hugging Face art pipeline from the earlier creature-collector design. The platformer doesn't
+> load its output yet (it's built from shapes in code), so `python -m wildtide unity` only copies files into the project.
 
 The Wildtide asset prompt library (161 prompts, 11 sections), plus a pipeline that turns
 those prompts into assets with open models on Hugging Face instead of (or alongside) Higgsfield.
