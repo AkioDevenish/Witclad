@@ -1,28 +1,40 @@
 #!/bin/bash
 # Builds Wildtide and installs it on the iPhone plugged into this Mac.
 #
-#   curl -fsSL https://raw.githubusercontent.com/AkioDevenish/Witclad/claude/tender-davinci-g1tzk1/unity/Wildtide/build-iphone.sh -o /tmp/wt.sh && bash /tmp/wt.sh
+#   curl -fsSL https://raw.githubusercontent.com/AkioDevenish/Witclad/claude/bold-curie-0aqljk/unity/Wildtide/build-iphone.sh -o /tmp/wt.sh && bash /tmp/wt.sh
 #
+# Each run downloads the latest game from GitHub into ~/Wildtide-build (keeping Unity's cache, so later builds
+# are faster), builds it and installs it. Run it again whenever the game changes, or every 7 days on a free Apple ID.
 # Needs: Unity 6.0 with iOS Build Support, Xcode signed in to your Apple ID (Xcode > Settings > Accounts),
 # and the iPhone plugged in, unlocked, trusted, with Developer Mode on.
-# Optional: PROJECT=/path/to/unity/Wildtide  TEAM_ID=ABCDE12345  BUNDLE_ID=com.you.wildtide
+# Optional: BRANCH=some-branch (which version to download)  PROJECT=/path/to/unity/Wildtide (build a local copy instead)
+#           TEAM_ID=ABCDE12345  BUNDLE_ID=com.you.wildtide
 set -euo pipefail
 
 say()  { printf '\n\033[1;36m==> %s\033[0m\n' "$*"; }
 fail() { printf '\n\033[1;31mSTOPPED: %s\033[0m\n' "$*"; exit 1; }
 
-# ---- 1. Find the project ------------------------------------------------------------------------
-say "Looking for the Wildtide project"
+# ---- 1. Get the latest game ---------------------------------------------------------------------
+BRANCH=${BRANCH:-claude/bold-curie-0aqljk}
 if [ -z "${PROJECT:-}" ]; then
-  for base in "$HOME/Desktop" "$HOME/Downloads" "$HOME/Documents" "$HOME"; do
-    hit=$(find "$base" -maxdepth 6 -path '*unity/Wildtide/ProjectSettings/ProjectVersion.txt' 2>/dev/null | head -n 1 || true)
-    if [ -n "$hit" ]; then PROJECT=$(dirname "$(dirname "$hit")"); break; fi
-  done
+  say "Downloading the latest Wildtide ($BRANCH)"
+  WORK="$HOME/Wildtide-build"
+  PROJECT="$WORK/Wildtide"
+  ZIP=$(mktemp -d)
+  curl -fsSL "https://codeload.github.com/AkioDevenish/Witclad/zip/refs/heads/$BRANCH" -o "$ZIP/game.zip" \
+    || fail "Couldn't download the game from GitHub. Check your internet connection and try again."
+  unzip -q "$ZIP/game.zip" -d "$ZIP"
+  SRC=$(find "$ZIP" -maxdepth 4 -type d -path '*/unity/Wildtide' | head -n 1)
+  [ -n "$SRC" ] || fail "The download didn't contain unity/Wildtide."
+  mkdir -p "$PROJECT"
+  # Replace the code but keep Unity's Library cache and past builds.
+  rsync -a --delete --exclude /Library --exclude /Temp --exclude /Logs --exclude /UserSettings --exclude /Builds "$SRC/" "$PROJECT/"
+  rm -rf "$ZIP"
 fi
-[ -n "${PROJECT:-}" ] && [ -d "$PROJECT/Assets" ] || fail "Couldn't find the project. Run again with PROJECT=/path/to/unity/Wildtide in front."
+[ -n "${PROJECT:-}" ] && [ -d "$PROJECT/Assets" ] || fail "No Unity project at $PROJECT."
 echo "Project: $PROJECT"
 
-[ -f "$PROJECT/Assets/Wildtide/Editor/CiBuild.cs" ] || fail "Your download is older than this script. Download the ZIP from GitHub again, unzip it, and re-run."
+[ -f "$PROJECT/Assets/Wildtide/Editor/CiBuild.cs" ] || fail "That copy of the project is too old for this script. Run it without PROJECT= to download the latest."
 
 if [ -f "$PROJECT/Temp/UnityLockfile" ] && lsof "$PROJECT/Temp/UnityLockfile" >/dev/null 2>&1; then
   fail "The project is open in Unity. Quit Unity (Cmd+Q), then run this again."

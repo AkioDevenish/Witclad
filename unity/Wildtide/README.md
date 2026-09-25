@@ -36,7 +36,14 @@ The scene is empty on purpose: `GameRoot` builds the islands, UI and camera from
 **No Mac?** Follow [PHONE.md](PHONE.md). GitHub builds the app in the cloud and sends it to TestFlight on your iPhone
 (needs the Apple Developer Program). It also builds an Android APK.
 
-**With a Mac** (free Apple ID works):
+**With a Mac, one command** (free Apple ID works): plug in the iPhone and paste this into Terminal. It downloads the
+latest game, builds it and installs it. Run it again after changes, or every 7 days on a free Apple ID.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AkioDevenish/Witclad/claude/bold-curie-0aqljk/unity/Wildtide/build-iphone.sh -o /tmp/wt.sh && bash /tmp/wt.sh
+```
+
+**With a Mac, by hand** (free Apple ID works):
 
 1. **File → Build Profiles** (or **Build Settings**): choose **iOS**, **Switch Platform**, then **Build**.
    Pick an output folder, for example `Builds/iOS`.
