@@ -1,5 +1,8 @@
 # Wildtide on Hugging Face
 
+> **The game lives in [`unity/Wildtide`](unity/Wildtide/README.md):** a Unity 6 vertical slice for iOS and Android.
+> This page covers the art pipeline that feeds it.
+
 The Wildtide asset prompt library (161 prompts, 11 sections), plus a pipeline that turns
 those prompts into assets with open models on Hugging Face instead of (or alongside) Higgsfield.
 
@@ -49,6 +52,9 @@ python -m wildtide mesh assets/sheets/cindlet/clean-view-for-3d-model.png --back
 
 # 5. 2D last: cut icons and UI off their flat backgrounds
 python -m wildtide cutout assets/sheets/cindlet/party-and-codex-icon.png
+
+# 6. Into the game: concept cutouts show as billboards, GLBs replace the placeholder shapes
+python -m wildtide unity cindlet-stage-1 assets/creatures/cindlet-stage-1/concept_02_cutout.png
 
 # Video
 python -m wildtide video title-screen-loop

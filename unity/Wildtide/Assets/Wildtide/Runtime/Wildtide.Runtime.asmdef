@@ -1,0 +1,14 @@
+{
+    "name": "Wildtide.Runtime",
+    "rootNamespace": "Wildtide",
+    "references": ["Wildtide.Core"],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

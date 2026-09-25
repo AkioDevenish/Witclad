@@ -7,6 +7,7 @@
     python -m wildtide sheet clean-view-for-3d-model --ref <pick>.png --name cindlet
     python -m wildtide mesh assets/sheets/cindlet/clean-view-for-3d-model.png
     python -m wildtide video title-screen-loop
+    python -m wildtide unity cindlet-stage-1 assets/creatures/cindlet-stage-1/concept_02_cutout.png
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PROMPTS = ROOT / "prompts" / "prompts.json"
 ASSETS = ROOT / "assets"
+UNITY_RESOURCES = ROOT / "unity" / "Wildtide" / "Assets" / "Wildtide" / "Resources"
 
 WIDE = (1344, 768)
 SQUARE = (1024, 1024)
@@ -226,6 +228,28 @@ def cmd_video(args) -> None:
     print(f"    -> {rel(path)}")
 
 
+def cmd_unity(args) -> None:
+    """Copy a picked concept (ideally a cutout) or a GLB into the Unity project, named by prompt id."""
+    import shutil
+
+    entry = find(load(), args.id)
+    src = Path(args.file)
+    if not src.exists():
+        sys.exit(f"{src} not found")
+    if src.suffix.lower() == ".glb":
+        dest = UNITY_RESOURCES / "Creatures" / f"{entry['id']}.glb"
+        note = "needs the glTFast package (com.unity.cloud.gltfast) to import"
+    elif src.suffix.lower() == ".png":
+        dest = UNITY_RESOURCES / "Concepts" / f"{entry['id']}.png"
+        note = "shows as a billboard; use a transparent cutout for a clean edge"
+    else:
+        sys.exit("expected a .png concept/cutout or a .glb mesh")
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy(src, dest)
+    log({"id": entry["id"], "file": rel(dest), "source": str(src), "step": "unity"})
+    print(f"  -> {rel(dest)}  ({note})")
+
+
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(prog="wildtide", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--provider", default="auto", help="HF Inference Provider (auto, fal-ai, replicate, together, ...)")
@@ -281,6 +305,11 @@ def main(argv: list[str] | None = None) -> None:
     s.add_argument("--seed", type=int)
     s.add_argument("--fill", action="append", default=[], metavar="KEY=VALUE")
     s.set_defaults(fn=cmd_video)
+
+    s = sub.add_parser("unity", help="send a picked concept PNG or GLB into the Unity game")
+    s.add_argument("id", help="prompt id, e.g. cindlet-stage-1")
+    s.add_argument("file")
+    s.set_defaults(fn=cmd_unity)
 
     args = p.parse_args(argv)
     args.fn(args)
