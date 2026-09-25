@@ -18,6 +18,21 @@ namespace Wildtide.Core
     public sealed class Progress
     {
         public List<LevelRecord> Records = new List<LevelRecord>();
+        /// <summary>Which hero you play as; one of <see cref="Heroes"/>.</summary>
+        public string Hero = Heroes[0];
+
+        /// <summary>Playable heroes. Each has a model at Resources/Characters/&lt;name&gt; (made by tools/blender/heroes.py).</summary>
+        public static readonly string[] Heroes = { "Lyra", "Gareth" };
+
+        public static string HeroTitle(string hero) => hero == "Gareth" ? "Sir Gareth" : hero;
+
+        /// <summary>Switches to the next hero, wrapping round. Unknown names start again from the first.</summary>
+        public string NextHero()
+        {
+            int i = Array.IndexOf(Heroes, Hero);
+            Hero = Heroes[(i + 1) % Heroes.Length];
+            return Hero;
+        }
 
         public LevelRecord Get(string id)
         {

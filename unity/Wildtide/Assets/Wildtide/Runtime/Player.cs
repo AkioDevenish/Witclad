@@ -53,16 +53,59 @@ namespace Wildtide
             cc.slopeLimit = 50f;
             cc.skinWidth = 0.04f;
             var p = go.AddComponent<PlayerController>();
-            p.visual = BuildVisual(go.transform);
+            p.visual = new GameObject("Visual").transform;
+            p.visual.SetParent(go.transform, false);
+            p.SetHero(null);
             p.shadow = Shapes.Make(PrimitiveType.Cylinder, null, Vector3.zero, new Vector3(0.8f, 0.01f, 0.8f), Materials.Hex(0x1F3C5AFF), name: "Player Shadow").transform;
             return p;
         }
 
-        /// <summary>Stand-in hero: a little islander in a sea-foam tunic with a coral scarf and a sun hat.</summary>
-        static Transform BuildVisual(Transform parent)
+        /// <summary>
+        /// Swaps the player's look to a hero model from Resources/Characters (made by tools/blender/heroes.py),
+        /// or the built-in islander if there's no model by that name.
+        /// </summary>
+        public void SetHero(string hero)
         {
-            var v = new GameObject("Visual").transform;
-            v.SetParent(parent, false);
+            for (int i = visual.childCount - 1; i >= 0; i--) Destroy(visual.GetChild(i).gameObject);
+            var model = string.IsNullOrEmpty(hero) ? null : Resources.Load<GameObject>("Characters/" + hero);
+            if (model == null)
+            {
+                BuildIslander(visual);
+                return;
+            }
+            var m = Instantiate(model, visual);
+            m.name = hero;
+            m.transform.localPosition = Vector3.zero;
+            m.transform.localRotation = Quaternion.identity;
+            foreach (var c in m.GetComponentsInChildren<Collider>()) Destroy(c);
+            var renderers = m.GetComponentsInChildren<Renderer>();
+            foreach (var r in renderers)
+            {
+                // Rebuild every material with the game's toon shader, taking the colour from the "#RRGGBB" in its name.
+                var mats = r.sharedMaterials;
+                for (int i = 0; i < mats.Length; i++) mats[i] = Materials.Get(ColorFromName(mats[i]));
+                r.sharedMaterials = mats;
+            }
+            // Models are exported about 1.35 m tall (1.7 m to the staff tip); fix it up if an importer rescaled it.
+            var bounds = new Bounds(m.transform.position, Vector3.zero);
+            foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+            if (bounds.size.y > 0.01f && (bounds.size.y < 0.8f || bounds.size.y > 3f))
+                m.transform.localScale *= 1.7f / bounds.size.y;
+        }
+
+        static Color ColorFromName(Material material)
+        {
+            if (material == null) return Color.white;
+            int hash = material.name.IndexOf('#');
+            if (hash >= 0 && hash + 7 <= material.name.Length
+                && ColorUtility.TryParseHtmlString(material.name.Substring(hash, 7), out var c)) return c;
+            if (material.HasProperty("_BaseColor")) return material.GetColor("_BaseColor");
+            return material.HasProperty("_Color") ? material.color : Color.white;
+        }
+
+        /// <summary>Fallback look: a little islander in a sea-foam tunic with a coral scarf and a sun hat.</summary>
+        static void BuildIslander(Transform v)
+        {
             var skin = Materials.Hex(0xC98B63FF);
             Shapes.Make(PrimitiveType.Capsule, v, new Vector3(-0.14f, 0.25f, 0f), new Vector3(0.2f, 0.25f, 0.2f), Materials.Hex(0x3C4A6BFF), name: "Leg");
             Shapes.Make(PrimitiveType.Capsule, v, new Vector3(0.14f, 0.25f, 0f), new Vector3(0.2f, 0.25f, 0.2f), Materials.Hex(0x3C4A6BFF), name: "Leg");
@@ -75,7 +118,6 @@ namespace Wildtide
             Shapes.Make(PrimitiveType.Cylinder, v, new Vector3(0f, 1.34f, 0f), new Vector3(0.8f, 0.03f, 0.8f), Materials.Hex(0xF5D98AFF), name: "Hat Brim");
             Shapes.Make(PrimitiveType.Sphere, v, new Vector3(0f, 1.38f, 0f), new Vector3(0.4f, 0.22f, 0.4f), Materials.Hex(0xF5D98AFF), name: "Hat");
             Shapes.Make(PrimitiveType.Cylinder, v, new Vector3(0f, 1.37f, 0f), new Vector3(0.42f, 0.03f, 0.42f), Materials.Hex(0xF2705AFF), name: "Hat Band");
-            return v;
         }
 
         void Awake() => controller = GetComponent<CharacterController>();

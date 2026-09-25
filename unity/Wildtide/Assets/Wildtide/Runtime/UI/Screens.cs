@@ -140,8 +140,10 @@ namespace Wildtide.UI
     public sealed class MenuScreen : MonoBehaviour
     {
         public Action<int> Chosen;
+        public Action HeroPressed;
         RectTransform list;
         Text total;
+        Button hero;
 
         public static MenuScreen Create()
         {
@@ -160,6 +162,8 @@ namespace Wildtide.UI
             m.total = Ui.Label(safe, "", 40, Ui.Gold, TextAnchor.MiddleLeft);
             Ui.Place(m.total.rectTransform, new Vector2(0f, 0f), new Vector2(700f, 80f), new Vector2(96f, 70f));
             m.total.gameObject.AddComponent<Shadow>().effectDistance = new Vector2(3f, -3f);
+            m.hero = Ui.MakeButton(safe, "", Ui.Gold, () => m.HeroPressed?.Invoke(), 42);
+            Ui.Place((RectTransform)m.hero.transform, new Vector2(0f, 0f), new Vector2(520f, 110f), new Vector2(96f, 170f));
 
             var panel = Ui.Panel(safe, Ui.Navy, "Islands");
             panel.rectTransform.anchorMin = new Vector2(0.52f, 0.06f);
@@ -196,6 +200,7 @@ namespace Wildtide.UI
                 right.rectTransform.offsetMax = new Vector2(-30f, -12f);
             }
             total.text = $"Pearls found: {progress.TotalPearls()}";
+            Ui.SetText(hero, $"Hero: {Progress.HeroTitle(progress.Hero)}  >");
         }
 
         public void Hide() => gameObject.SetActive(false);

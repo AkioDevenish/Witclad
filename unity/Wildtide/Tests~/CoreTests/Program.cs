@@ -141,5 +141,9 @@ static class Program
         Check(p.TotalPearls() == 7, "total pearls");
         Check(!p.IsUnlocked(Levels.All.Count), "no level past the end");
         Check(Progress.FormatTime(75.46f) == "1:15.4", "time format " + Progress.FormatTime(75.46f));
+        Check(p.Hero == Progress.Heroes[0], "starts as the first hero");
+        Check(p.NextHero() == Progress.Heroes[1] && p.NextHero() == Progress.Heroes[0], "hero switch wraps round");
+        p.Hero = "Nobody";
+        Check(p.NextHero() == Progress.Heroes[0], "unknown hero resets to the first");
     }
 }

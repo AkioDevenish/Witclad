@@ -76,6 +76,13 @@ namespace Wildtide
 
             menu = MenuScreen.Create();
             menu.Chosen = Play;
+            menu.HeroPressed = () =>
+            {
+                player.SetHero(progress.NextHero());
+                SaveSystem.Write(progress);
+                menu.Show(progress);
+            };
+            player.SetHero(progress.Hero);
 
             cleared = ClearedPanel.Create();
             cleared.Menu = () => { cleared.Hide(); ShowMenu(); };
@@ -142,6 +149,7 @@ namespace Wildtide
                 var data = JsonUtility.FromJson<Progress>(File.ReadAllText(FilePath));
                 if (data == null) return null;
                 if (data.Records == null) data.Records = new System.Collections.Generic.List<LevelRecord>();
+                if (Array.IndexOf(Progress.Heroes, data.Hero) < 0) data.Hero = Progress.Heroes[0];
                 data.Records.RemoveAll(r => r == null || Levels.IndexOf(r.Id) < 0); // islands renamed or removed
                 return data;
             }

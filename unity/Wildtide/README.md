@@ -67,6 +67,14 @@ curl -fsSL https://raw.githubusercontent.com/AkioDevenish/Witclad/claude/bold-cu
 3. **Build And Run**. For the Play Store, tick **Build App Bundle (.aab)** and set up a keystore under
    Player Settings → Publishing Settings.
 
+## Heroes
+
+Pick **Lyra** (battle-mage) or **Sir Gareth** (paladin) with the Hero button on the island list. Their models are
+`Assets/Wildtide/Resources/Characters/*.fbx`, built in Blender by `tools/blender/heroes.py`
+(`pip install bpy==4.2.0`, then `python tools/blender/heroes.py`), which also saves `tools/blender/source/heroes.blend`
+for hand editing and preview renders in `tools/blender/renders/`. The game recolours them with its toon shader
+using the `#RRGGBB` in each material's name. They aren't rigged yet: the game squashes and bobs the whole model.
+
 ## Making islands
 
 Islands are text in `Assets/Wildtide/Core/Levels.cs`: two grids of the same size, north at the top.
