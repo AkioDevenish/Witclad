@@ -17,7 +17,7 @@ namespace Wildtide.EditorTools
     public static class ProjectSetup
     {
         public const string BundleId = "com.witclad.wildtide";
-        const string ScenePath = "Assets/Scenes/Main.unity";
+        public const string ScenePath = "Assets/Scenes/Main.unity";
         const string SettingsFolder = "Assets/Wildtide/Settings";
         const string DoneKey = "Wildtide.SetupDone";
 
@@ -26,6 +26,7 @@ namespace Wildtide.EditorTools
             // Run once per project after the first import finishes.
             EditorApplication.delayCall += () =>
             {
+                if (Application.isBatchMode) return; // CI builds call Run() themselves (see CiBuild)
                 if (PlayerSettings.productName == "Wildtide" && File.Exists(ScenePath) && GraphicsSettings.defaultRenderPipeline != null) return;
                 if (SessionState.GetBool(DoneKey, false)) return;
                 SessionState.SetBool(DoneKey, true);

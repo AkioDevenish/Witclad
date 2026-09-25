@@ -38,7 +38,10 @@ The scene is empty on purpose: `GameRoot` builds the world, UI and cameras from 
 
 ## Run it on your iPhone
 
-Apple only builds iOS apps on a Mac with **Xcode** installed.
+**No Mac?** Follow [PHONE.md](PHONE.md). GitHub builds the app in the cloud and sends it to TestFlight on your iPhone
+(needs the Apple Developer Program). It also builds an Android APK.
+
+**With a Mac** (free Apple ID works):
 
 1. **File → Build Profiles** (or **Build Settings**): choose **iOS**, **Switch Platform**, then **Build**.
    Pick an output folder, for example `Builds/iOS`.
@@ -54,8 +57,6 @@ Apple only builds iOS apps on a Mac with **Xcode** installed.
 5. The first time, the iPhone may block the app: go to Settings → General → VPN & Device Management and trust
    your developer certificate.
 
-**No Mac?** Unity's cloud build service (Unity Build Automation) can build the iOS app for you. You'll still need
-the Apple Developer Program to sign it and install it through TestFlight.
 
 ## Run it on Android
 

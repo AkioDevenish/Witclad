@@ -1,0 +1,207 @@
+# Builds Wildtide for phones in the cloud, no Mac needed:
+#   Android -> an .apk you can download from the run and install.
+#   iPhone  -> built on a GitHub macOS runner and uploaded to TestFlight; install it with the TestFlight app.
+# One-time setup (secrets and the App Store Connect app record): see unity/Wildtide/PHONE.md.
+name: Build for phones
+
+on:
+  push:
+    branches: [claude/tender-davinci-g1tzk1, main]
+    paths: ["unity/**", ".github/workflows/phones.yml"]
+  workflow_dispatch:
+    inputs:
+      testflight:
+        description: Upload the iPhone build to TestFlight
+        type: boolean
+        default: true
+
+concurrency:
+  group: phones-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PROJECT_PATH: unity/Wildtide
+  BUNDLE_ID: ${{ vars.BUNDLE_ID || 'com.witclad.wildtide' }}
+
+jobs:
+  setup-check:
+    name: Check secrets
+    runs-on: ubuntu-latest
+    outputs:
+      unity: ${{ steps.check.outputs.unity }}
+      apple: ${{ steps.check.outputs.apple }}
+    steps:
+      - id: check
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
+        run: |
+          if [ -n "$UNITY_LICENSE" ] && [ -n "$UNITY_EMAIL" ] && [ -n "$UNITY_PASSWORD" ]; then
+            echo "unity=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "unity=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Unity secrets (UNITY_LICENSE, UNITY_EMAIL, UNITY_PASSWORD) not set, so the phone builds are skipped. See unity/Wildtide/PHONE.md."
+          fi
+          if [ -n "$APPLE_TEAM_ID" ] && [ -n "$APPSTORE_KEY_ID" ] && [ -n "$APPSTORE_ISSUER_ID" ] && [ -n "$APPSTORE_P8" ]; then
+            echo "apple=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "apple=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Apple secrets not set, so the TestFlight upload is skipped. See unity/Wildtide/PHONE.md."
+          fi
+
+  core-tests:
+    name: Game rules tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - run: dotnet run --project "unity/Wildtide/Tests~/CoreTests"
+
+  build:
+    name: Unity ${{ matrix.targetPlatform }}
+    needs: [setup-check, core-tests]
+    if: needs.setup-check.outputs.unity == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform: [Android, iOS]
+    steps:
+      - name: Free disk space for the Unity image
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          tool-cache: false
+          large-packages: false
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ env.PROJECT_PATH }}/Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('unity/Wildtide/Assets/**', 'unity/Wildtide/Packages/**', 'unity/Wildtide/ProjectSettings/**') }}
+          restore-keys: Library-${{ matrix.targetPlatform }}-
+
+      - uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: ${{ env.PROJECT_PATH }}
+          targetPlatform: ${{ matrix.targetPlatform }}
+          buildName: Wildtide
+          buildsPath: build
+          buildMethod: Wildtide.EditorTools.CiBuild.Build
+          versioning: Custom
+          version: 0.1.${{ github.run_number }}
+          androidVersionCode: ${{ github.run_number }}
+          androidExportType: androidPackage
+          customParameters: -bundleId ${{ env.BUNDLE_ID }}
+
+      - name: Upload Android APK
+        if: matrix.targetPlatform == 'Android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wildtide-Android
+          path: build/Android/*.apk
+          if-no-files-found: error
+
+      # Tar keeps file permissions on the Xcode project's scripts, which artifacts would otherwise drop.
+      - name: Pack Xcode project
+        if: matrix.targetPlatform == 'iOS'
+        run: sudo tar -czf Wildtide-iOS.tar.gz -C build/iOS Wildtide && sudo chown "$USER" Wildtide-iOS.tar.gz
+
+      - name: Upload Xcode project
+        if: matrix.targetPlatform == 'iOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Wildtide-iOS-Xcode
+          path: Wildtide-iOS.tar.gz
+          if-no-files-found: error
+
+  testflight:
+    name: iPhone -> TestFlight
+    needs: [setup-check, build]
+    if: needs.setup-check.outputs.apple == 'true' && (github.event_name == 'push' || inputs.testflight)
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      APPSTORE_KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+      APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Wildtide-iOS-Xcode
+
+      - name: Unpack Xcode project
+        run: mkdir ios && tar -xzf Wildtide-iOS.tar.gz -C ios && ls ios/Wildtide
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: App Store Connect API key
+        env:
+          APPSTORE_P8: ${{ secrets.APPSTORE_P8 }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/keys"
+          KEY="$RUNNER_TEMP/keys/AuthKey_$APPSTORE_KEY_ID.p8"
+          printf '%s\n' "$APPSTORE_P8" > "$KEY"
+          echo "API_KEY_PATH=$KEY" >> "$GITHUB_ENV"
+
+      - name: Build number and export compliance
+        run: |
+          PLIST=ios/Wildtide/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" "$PLIST"
+          /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST" \
+            || /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST"
+
+      # Archive unsigned, then let the export sign it with Apple's cloud-managed distribution certificate
+      # (needs an App Store Connect API key with the Admin role). No certificates or profiles to manage.
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -project ios/Wildtide/Unity-iPhone.xcodeproj \
+            -scheme Unity-iPhone \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Wildtide.xcarchive" \
+            DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO \
+            | tail -n 200
+          test -d "$RUNNER_TEMP/Wildtide.xcarchive"
+
+      - name: Sign and upload to TestFlight
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key><string>app-store-connect</string>
+            <key>destination</key><string>upload</string>
+            <key>teamID</key><string>${APPLE_TEAM_ID}</string>
+            <key>signingStyle</key><string>automatic</string>
+            <key>uploadSymbols</key><true/>
+          </dict>
+          </plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Wildtide.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$API_KEY_PATH" \
+            -authenticationKeyID "$APPSTORE_KEY_ID" \
+            -authenticationKeyIssuerID "$APPSTORE_ISSUER_ID"
+          echo "### Uploaded build $GITHUB_RUN_NUMBER to TestFlight" >> "$GITHUB_STEP_SUMMARY"
+          echo "Apple takes about 5 to 15 minutes to process it, then it shows up in the TestFlight app on your iPhone." >> "$GITHUB_STEP_SUMMARY"
