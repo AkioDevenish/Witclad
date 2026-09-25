@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+.env
+# Generated art is big; commit the picks you keep, not every variation.
+assets/

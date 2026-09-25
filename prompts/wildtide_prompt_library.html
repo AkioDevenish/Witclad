@@ -1,0 +1,722 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}</style><style>:root{color-scheme:light dark;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}@media (prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}}:root[data-theme="dark"]{color-scheme:dark;--md-bg:#0d0d0d;--md-text:rgba(255,255,255,.85);--md-muted:rgba(255,255,255,.6);--md-fill:rgba(255,255,255,.06);--md-fill-strong:rgba(255,255,255,.09);--md-rule:rgba(255,255,255,.14);--md-rule-strong:rgba(255,255,255,.22);--md-link:hsl(210 100% 72%)}:root[data-theme="light"]{color-scheme:light}@media print{:root,:root[data-theme="dark"]{color-scheme:light;--md-bg:#fff;--md-text:rgba(0,0,0,.8);--md-muted:rgba(0,0,0,.6);--md-fill:rgba(0,0,0,.04);--md-fill-strong:rgba(0,0,0,.06);--md-rule:rgba(0,0,0,.1);--md-rule-strong:rgba(0,0,0,.16);--md-link:hsl(210 100% 45%)}}body{background:var(--md-bg);color:var(--md-text);max-width:720px;margin:0 auto;padding:32px;display:flex;flex-direction:column;gap:10px;font:14px/1.55 -apple-system,BlinkMacSystemFont,'SF Pro','Segoe UI',sans-serif;overflow-wrap:break-word}body>:first-child{margin-top:0}h1,h2,h3,h4,h5,h6{margin:6px 0 0;line-height:1.25;font-weight:600;text-wrap:balance}h1{font-size:1.35em}h2{font-size:1.15em;color:var(--md-muted)}h3,h4,h5,h6{font-size:1em}p,ul,ol,blockquote,table,pre,hr{margin:0}strong{font-weight:600}a{color:var(--md-link);text-decoration:none}a:hover{text-decoration:underline}ul,ol{display:flex;flex-direction:column;gap:6px;padding-left:22px}ul{list-style:disc}ol{list-style:decimal}:is(li,td,th)>*+:is(p,ul,ol,blockquote){margin-top:6px}blockquote{display:flex;flex-direction:column;gap:10px;border-left:2px solid var(--md-rule);padding-left:10px;color:var(--md-muted)}:not(pre)>code{background:var(--md-fill);padding:1px 3px;border-radius:4px;font:.92em 'SF Mono',ui-monospace,Menlo,Consolas,monospace}a>code{background:none;color:inherit}pre{background:var(--md-fill);padding:10px 12px;border-radius:6px;overflow-x:auto;font:12px/1.5 'SF Mono',ui-monospace,Menlo,Consolas,monospace;margin-block:4px}pre code{background:none;padding:0;font:inherit}table{width:100%;border-collapse:separate;border-spacing:2px;font:inherit}th,td{padding:6px 8px;border-radius:3px;text-align:left;vertical-align:top}th{background:var(--md-fill-strong);font-weight:600}td{background:var(--md-fill)}:is(th,td) :not(pre)>code{background:transparent}hr{border:0;border-top:1px solid var(--md-rule-strong);margin-block:10px}img{max-width:100%;height:auto;border-radius:4px}</style>
+</head><body>
+<h1>Wildtide: asset prompt library</h1>
+<p>Prompts for an original 3D creature-collecting RPG, ready to paste into Higgsfield. 161 prompts across 11 sections. All names are working names; change anything.</p>
+<h2>How to use this</h2>
+<ol>
+<li><strong>Lock the look.</strong> Run the three style tests, pick one image you'd happily ship, and keep it as your golden reference. Attach it to every image prompt after that.</li>
+<li><strong>Concept.</strong> Generate four variations per asset and pick one. If it doesn't read as a black silhouette, it isn't done.</li>
+<li><strong>Model sheet.</strong> Attach the pick to the matching turnaround prompt. That sheet is the source of truth.</li>
+<li><strong>Mesh.</strong> Feed the clean single view into Higgsfield 3D Model (web or the Blender add-on). Check topology, UVs and poly count in Blender before trusting it.</li>
+<li><strong>Rig and animate.</strong> Try Character Animation in the Blender add-on on humanoids. Test one creature first; four-legged and flying creatures often still need a hand-built rig.</li>
+<li><strong>Engine.</strong> Put one toon shader on everything. The cel-shaded look should come from the shader, not from light baked into textures. That's what keeps 150 assets looking like one game.</li>
+<li><strong>2D last.</strong> Cut icons and UI off their flat backgrounds and rebuild all text in-engine.</li>
+</ol>
+<p><strong>Style suffix.</strong> It's already baked into every prompt that needs it. Prompts that set their own flat lighting (turnarounds, 3D inputs, textures, icons, UI) leave it out on purpose. If you change the art direction, find and replace this line across the doc:</p>
+<pre><code class="language-text">Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Build a vertical slice first:</strong> three starter lines, six route creatures, one legendary, both players, the rival, the mentor, one Warden, Brightcove, Windmill Meadows, one trial arena, the battle screen and the Bond Lanterns. Get that playing well before generating the rest.</p>
+<p><strong>Rules:</strong> keep franchise and studio names out of prompts. One shape, one signature feature, three main colors per creature. Text in [BRACKETS] is a slot to fill before you paste.</p>
+<p><strong>Working names:</strong> Veyra Archipelago (region), Bond Lanterns (capture devices), Hearth House (healing center), Wardens (trial leaders), The Stillwater Order (villains), Relic Arms (field weapons).</p>
+<p><strong>Elements (12):</strong> Flame, Tide, Verdant, Storm, Stone, Frost, Gale, Venom, Spirit, Iron, Lumen, Umbra.</p>
+<h2>1. Style tests</h2>
+<p>Run these first. Generate 4 to 8 of each, pick the one image you'd happily ship, and save it as your golden reference. Attach it to every image prompt after this.</p>
+<p><strong>Look test: hero scene</strong><br>
+Sets the overall look. <em>Model: Nano Banana Pro or Soul 2.0 (try both)</em></p>
+<pre><code class="language-text">Key art for an original 3D creature-collecting RPG set on a bright island archipelago. A young adventurer walks a grassy cliff path with two small creature companions: a round baby pangolin with charcoal scales and glowing ember seams, and a tiny narwhal pup floating inside a wobbling bubble of water. Below, a seaside village of white cottages with blue roofs, a small harbor, turquoise sea, a distant volcanic island, big soft clouds. High-angle three-quarter camera, like an elevated third-person game view. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Look test: creature render</strong><br>
+Sets how creatures are rendered. <em>Model: Nano Banana Pro or Soul 2.0 (try both)</em></p>
+<pre><code class="language-text">A single original creature on a small round grassy turntable base: a chubby baby capybara whose fur is soft green moss dotted with tiny white flowers, a single clover sprout on its nose, sleepy content eyes, stubby legs. Full body, three-quarter front view, centered, soft gradient sky background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Look test: playable area</strong><br>
+Sets how the overworld reads from the game camera. <em>Model: Nano Banana Pro or Soul 2.0 (try both)</em></p>
+<pre><code class="language-text">High-angle three-quarter view of a small playable 3D game area: patches of tall encounter grass, a winding dirt path, a wooden signpost, a stream crossed by a plank bridge, low stone ledges, rounded trees, clusters of wildflowers, a small pond. Clear walkable routes, readable shapes, bright afternoon light, camera about 50 degrees above the ground. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>2. Creatures</h2>
+<p>25 designs: three starter lines, twelve route creatures, three legendaries and a mythical. Generate the concept first, then run your pick through the model sheet prompts at the end of this section.</p>
+<h3>Starters: Flame line (ember pangolin)</h3>
+<p><strong>Cindlet (stage 1)</strong> (Flame)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Flame element, stage 1 of 3: a pudgy baby pangolin curled half-open, overlapping charcoal scales with glowing orange ember seams between them, a small flame flickering on the tip of its curled tail, oversized amber eyes, pink snout, stubby clawed paws. Clumsy and brave. Palette: charcoal, ember orange, warm cream belly. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Scorchscale (stage 2)</strong> (Flame)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Flame element, stage 2 of 3: the evolved teenage form of a baby ember pangolin, lean and upright on its hind legs, larger scales that flare open like vents releasing sparks, ember seams running up its forearms, a longer whip-like tail flame, confident smirk, sharper amber eyes. Palette: charcoal, ember orange, molten yellow. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Pyrangol (stage 3)</strong> (Flame)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Flame element, stage 3 of 3: the final form of an ember pangolin line, a massive upright pangolin warrior, scales forged like volcanic plate armor with molten cracks, shoulder scales that fan open into a crown of fire, heavy digging claws glowing white-hot at the tips, tail ending in a blazing club of fused scales. Noble, protective, powerful. Palette: charcoal, molten orange, white-hot gold. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Starters: Tide line (narwhal)</h3>
+<p><strong>Narlet (stage 1)</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Tide element, stage 1 of 3: a tiny narwhal pup floating inside a wobbling sphere of water so it can travel on land, a short stubby spiral tusk, big glossy dark eyes, wide happy mouth, deep blue back with white freckles, pale belly, little flippers it waves like hands. Curious and bubbly. Palette: deep blue, white, sea-foam aqua. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Tuskwave (stage 2)</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Tide element, stage 2 of 3: the evolved teenage form of a narwhal pup, sleek and longer, surfing through the air on a curling ribbon of water, a longer spiral tusk with a coral-pink tip, freckles glowing faint cyan, fin edges shaped like wave crests, determined eyes. Palette: deep blue, cyan glow, coral pink. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Narvalor (stage 3)</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Tide element, stage 3 of 3: the final form of a narwhal line, a huge majestic narwhal swimming through the air inside an orbiting ring of ocean water, a long spiral tusk of polished coral like a knight&#39;s lance, armored brow plates, a glowing constellation pattern across its back, fins edged like breaking whitecaps, calm heroic eyes. Palette: navy, coral, glowing cyan. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Starters: Verdant line (moss capybara)</h3>
+<p><strong>Budbara (stage 1)</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Verdant element, stage 1 of 3: a chubby baby capybara whose fur is soft green moss dotted with tiny white flowers, a single clover sprout on its nose, sleepy half-closed eyes, round barrel body, stubby legs. Unbothered and sweet. Palette: moss green, warm brown, white blossom. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Grovebara (stage 2)</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Verdant element, stage 2 of 3: the evolved teenage form of a moss capybara, sturdier and taller, a shaggy moss mane with small ferns, vines wrapped around its forelegs like bracers, a ring of wildflowers blooming along its spine, a tiny bird perched on its head, relaxed but alert. Palette: moss green, warm brown, sunflower yellow. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Elderbara (stage 3)</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original starter creature for a 3D creature-collecting RPG, Verdant element, stage 3 of 3: the final form of a moss capybara line, a giant ancient capybara with a flowing mane of hanging vines and flowering moss, bark-plated shoulders, a crown of branching blossoms circling its head like a laurel wreath, root-like feet gripping the ground, fireflies drifting in its mane, serene knowing eyes. A walking sanctuary. Palette: deep green, bark brown, blossom pink. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Route creatures</h3>
+<p>One per element. Use the template at the end of this section to design their evolutions.</p>
+<p><strong>Kilnpup</strong> (Flame)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Flame element, first stage: a small puppy shaped like a glazed clay pottery figurine, hollow body with a kiln fire glowing through round vent holes on its sides, soot smudges around the vents, ears like chipped pottery shards, a wagging tail with an ember tip. Palette: terracotta orange, cream glaze, ember glow. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Glasscrab</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Tide element, first stage: a hermit crab living in a bottle-shaped shell of frosted sea glass, soft light glowing through the glass, one oversized claw, curious eye stalks, tiny barnacles on the rim. Palette: sea-glass green, coral pink, sand beige. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Capfrog</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Verdant element, first stage: a squat frog wearing a wide red mushroom cap with cream spots, tiny toadstools sprouting on its back, puffs of spores when it croaks, moss-green skin, sleepy grin. Palette: moss green, mushroom red, cream. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Stratojel</strong> (Storm)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Storm element, first stage: a floating jellyfish whose dome is a puffy thundercloud, trailing tentacles of crackling blue-white lightning, two small eyes glowing inside the cloud when it charges. Palette: storm gray, electric yellow, pale blue. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Geodig</strong> (Stone)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Stone element, first stage: a stout mole with claws made of cracked-open geodes, amethyst crystals poking through the fur on its back, goggle-like markings around tiny eyes, a dusty pink nose. Palette: slate brown, amethyst purple, dusty pink. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Rimehare</strong> (Frost)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Frost element, first stage: a snow hare with long ears ending in icicle tips, frost-white fur with pale blue shading, a snowflake-shaped tail, ice crystals on its whiskers, breath misting in the air. Palette: snow white, glacier blue, silver. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Whirlgecko</strong> (Gale)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Gale element, first stage: a slender gecko with a pinwheel-shaped frill around its neck that spins in the wind to lift it off the ground, sail-like webbed toes, wind-swirl stripes along its body. Palette: sky white, mint green, sandy tan. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Stingsnail</strong> (Venom)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Venom element, first stage: a snail whose spiral shell is striped in neon violet and lime, a curled scorpion-like stinger rising from the back of the shell, drips of glowing slime, shy droopy eyestalks. Palette: violet, neon lime, dark plum. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Mistcoat</strong> (Spirit)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Spirit element, first stage: a small empty raincoat and pair of boots walking on their own, two soft glowing eyes in the dark of the hood, water droplets floating in the air around it, faint glowing footprints behind it. Eerie but cute. Palette: faded rose, pale lavender glow, slate gray. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Rivetusk</strong> (Iron)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Iron element, first stage: a small sturdy boar armored in riveted steel plates like an old boiler, curved tusks of polished iron, a gear-shaped tuft on its tail, puffs of steam from its snout. Palette: gunmetal gray, copper rivets, brick red. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Prismowl</strong> (Lumen)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Lumen element, first stage: a round owlet whose feathers are layered stained-glass panes that throw colored light on the ground, a thin ring of light floating around its face, tiny golden talons. Palette: warm ivory, pale gold, soft rainbow refractions. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Duskferret</strong> (Umbra)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature for a 3D creature-collecting RPG, Umbra element, first stage: a slinky ferret whose fur fades into smoke at the edges, a crescent-moon tip on its tail, large violet eyes that glow in the dark, star-like speckles along its back. Palette: deep indigo, violet, silver speckles. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Legendaries and mythical</h3>
+<p><strong>Veyrath, guardian of the sea</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Legendary guardian of the archipelago for a 3D creature-collecting RPG: a colossal sea creature between a whale and a serpent, carrying ancient stone ruins and a small forest on its back, long flowing fins like sails, orbiting rings of floating water, calm moon-like eyes, glowing runes along its flanks. Rising out of the ocean at dawn, tiny fishing boats in the foreground for scale. Epic, awe-inspiring scale. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Solmara, legend of the sun</strong> (Lumen)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Legendary sky creature for a 3D creature-collecting RPG: a towering golden heron with long legs that stride across the sea, wings of stained-glass sunlight, a blazing sun-disc halo behind its head, streamers of light trailing from its tail feathers, proud serene expression. Standing on a sunlit mountaintop temple above the clouds. Epic scale. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Nocthyr, legend of the night</strong> (Umbra)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Legendary night creature for a 3D creature-collecting RPG: a long-bodied moth-dragon with vast wings patterned like a night sky full of constellations, a crescent-moon horn, silver feathered antennae, trailing stardust, a calm unsettling gaze. Hovering over a frozen lake under a full moon. Epic scale. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Ilo, the first bond (mythical)</strong> (Spirit)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Mythical creature for a 3D creature-collecting RPG: a tiny floating spirit shaped like a glowing seed pod, stubby arms, a single green sprout on its head, a soft inner light that pulses like a heartbeat, surrounded by drifting fireflies. Believed to be the first creature ever bonded to a human. Small, wondrous, gentle. Hovering above a mossy stone in a forest clearing at dusk. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Design your own</h3>
+<p>Fill every bracket. Keep it to three main colors.</p>
+<p><strong>Creature template</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original creature design for a 3D creature-collecting RPG. Element: [ELEMENT]. Evolution stage: [1, 2 or 3] of [TOTAL]. Based on a [ANIMAL OR OBJECT] mixed with [SECOND IDEA]. Personality: [TRAIT]. Size: [e.g. fits in two hands]. Signature feature: [ONE MEMORABLE TRAIT]. Palette: [THREE COLORS]. Full body, three-quarter front view, on a small round grassy turntable base, soft gradient background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Model sheets for any creature</h3>
+<p>Attach the concept you picked, then paste one of these.</p>
+<p><strong>Turnaround sheet</strong><br>
+Your model sheet. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact design reference, create a turnaround sheet for 3D modeling: front view, left side view, back view and three-quarter front view, all full body, same scale, standing on one horizontal baseline, neutral standing pose with legs slightly apart and mouth closed, evenly spaced on a plain flat light-gray background. Flat even lighting, no cast shadows, no rim light, no effects, no text. Colors, markings, proportions and eye shape identical in every view. Clean stylized render with matte hand-painted textures.
+</code></pre>
+<p><strong>Clean view for 3D Model</strong><br>
+The single image you feed into Higgsfield 3D Model. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact reference, render it alone in a three-quarter front view, full body, centered, relaxed neutral standing pose with legs slightly apart, on a pure white background. Flat even studio lighting, no shadows, no background elements, no glow or particle effects. Every marking and proportion identical.
+</code></pre>
+<p><strong>Rare color variant</strong><br>
+Your shiny equivalent. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact reference, create its rare color variant. Keep the design, pose, markings and proportions identical. Change only the palette to [NEW PALETTE, e.g. silver-blue with pale gold accents], and add a subtle sparkle sheen on the highlights. Same camera and lighting as the reference. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Battle pose sheet</strong><br>
+Key poses for your animator or for Character Animation. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact reference, create a sheet of four battle poses on a plain light background: ready stance facing three-quarter front, mid-attack lunge, recoiling from a hit, and fainted lying on its side with swirl eyes. Same design and colors in all four, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Party and Codex icon</strong><br>
+Party screen and Codex. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact reference, create a small game icon of its head and shoulders in a three-quarter front view, bold readable silhouette, soft dark outline, bright even lighting, centered on a plain flat mint-green background for easy cutout. Must read clearly at 64 by 64 pixels. No text.
+</code></pre>
+<p><strong>Evolution lineup</strong><br>
+Checks the line reads as one family. Attach every stage. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached images as the reference for each stage, show the full evolution line side by side from left to right at true relative scale, all facing three-quarter front, standing on one shared ground line, plain light background. Keep shared markings consistent so they read as one family. No text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Ride-ready version</strong><br>
+Final-stage creatures the player can ride. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached creature as the exact reference, show it fitted with a rugged leather-and-canvas riding saddle and reins sized for a human rider, brass buckles, a small lantern clip on the saddle. Three-quarter view, plain background. Creature design unchanged. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>3. Characters</h2>
+<p>Player options, rival, mentor, key NPCs, the eight Wardens who run the island trials, the villain faction and background townsfolk.</p>
+<h3>Main cast</h3>
+<p><strong>Player A</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original player character for a 3D creature-collecting RPG: a young adult adventurer with an athletic build, short wavy dark hair under a sun-faded explorer cap, bright open expression. Outfit: sleeveless teal weather vest over a white tee, cargo shorts with lots of pockets, fingerless gloves, sturdy hiking boots, a canvas satchel with a brass capture lantern clipped to the strap. Full body, heroic three-quarter pose, simple island backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Player B</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original player character for a 3D creature-collecting RPG: a young adult adventurer with curly hair tied up in a high puff under a woven headband, confident grin. Outfit: cropped coral rain jacket over a striped top, high-waisted utility shorts over leggings, knee pads, trail sneakers, a crossbody bag holding two brass capture lanterns. Full body, energetic three-quarter pose, simple island backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Rival: Kade</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original rival character for a 3D creature-collecting RPG: a sharp, restless young adult trainer with an undercut and spiky hair dyed ember orange at the tips, cocky smirk, a long charcoal coat with rolled sleeves over a mesh shirt, a belt holding three capture lanterns, one arm pointing forward in challenge. Full body, dynamic three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Mentor: Archivist Oma Rell</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original mentor character for a 3D creature-collecting RPG: a warm, eccentric older naturalist with round spectacles, a silver braid wrapped around her head, a patched field vest over a linen shirt stuffed with pencils and notes, rolled sleeves, a tiny moss-furred capybara creature perched on her shoulder, holding a glowing field codex device. Full body, welcoming three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Hearth House healer</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original healer character who runs the creature healing center in a 3D creature-collecting RPG: calm and kind, hair tied back, a soft cream apron with a lantern-flame emblem over a sage-green tunic, sleeves rolled, holding a tray of glowing healing tonics, gentle smile. Full body, three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Traveling merchant: Pell</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original traveling merchant character for a 3D creature-collecting RPG: a jovial, stout trader in a wide straw hat, a towering backpack stacked with crates, lanterns and bottles, bead necklaces, an apron covered in pockets, holding up a glowing item with a sly grin. Full body, three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Champion</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original regional champion for a 3D creature-collecting RPG: a legendary trainer in a long white-and-gold captain&#39;s coat billowing in the wind, a relic harpoon strapped across the back, calm confident smile, weathered boots, standing on a sea cliff with the silhouette of a huge creature rising from the waves behind. Full body, heroic low-angle pose. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>The eight Wardens</h3>
+<p><strong>Warden Brom</strong> (Stone)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Stone trial leader in a 3D creature-collecting RPG: a broad, unshakable quarry foreman in a dented hard hat studded with crystals, dusty canvas overalls, huge work gloves, a pickaxe resting on one shoulder, calm steady gaze. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Fen</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Verdant trial leader in a 3D creature-collecting RPG: a cheerful greenhouse botanist with vines and small flowers woven through long braids, patched overalls, a watering can holstered on the hip like a sidearm, dirt on the knees. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Marisol</strong> (Tide)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Tide trial leader in a 3D creature-collecting RPG: a weathered lighthouse keeper in a yellow oilskin raincoat and captain&#39;s cap, a brass spyglass on the belt, rope coiled over one shoulder, salt-white streaks in the hair, stern but kind. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Zeph</strong> (Storm)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Storm trial leader in a 3D creature-collecting RPG: a hyper young storm-chaser with flight goggles pushed up on the head, an electric-yellow windbreaker, fingerless gloves, a lightning-bolt kite strapped to the back, static making the hair stand up. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Forja</strong> (Flame)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Flame trial leader in a 3D creature-collecting RPG: a towering blacksmith in a heat-scorched leather apron over light forge armor, soot on strong forearms, hair braided with metal rings, an ember-glowing hammer in one hand. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Sela</strong> (Frost)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Frost trial leader in a 3D creature-collecting RPG: a quiet ice-climbing guide in a fur-lined parka with frost on the hood, twin ice axes on the belt, snow goggles around the neck, a pale blue scarf whipping in the wind. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Lio</strong> (Spirit)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Spirit trial leader in a 3D creature-collecting RPG: a graceful festival dancer who tends a hilltop bell temple, flowing rose-and-lavender robes with long ribbon sleeves, a porcelain half-mask, small bells on the wrists. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden Vesper</strong> (Umbra)<br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original Warden character, the Umbra trial leader in a 3D creature-collecting RPG: a theatrical night-market ringmaster in a tall hat and a cape lined with a starry night sky, a silver-tipped cane, a sly half-smile, one eye behind a crescent-shaped monocle. Full body, confident three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>The Stillwater Order (villains)</h3>
+<p><strong>Grunt</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original villain foot soldier for a faction called The Stillwater Order in a 3D creature-collecting RPG: a slate-gray hooded coat with a silver emblem of a flat line inside a circle, a smooth porcelain-white mask covering the upper face, black gloves, a belt of cracked gray capture lanterns. Menacing but a little comedic. Full body, three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Lieutenant</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original villain lieutenant of The Stillwater Order in a 3D creature-collecting RPG: a tailored long slate coat with silver trim and a high collar, a short one-sided cape, porcelain mask pushed up onto the head, cold precise expression, holding a tablet device that drains glowing light from a captured lantern. Full body, three-quarter pose, plain backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Leader</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Original villain leader of The Stillwater Order in a 3D creature-collecting RPG: a tall, composed figure in layered flowing robes of gray and deep teal like a calm sea at night, a circlet shaped like a frozen wave, long silver hair, tired but certain eyes, holding a staff topped with an empty lantern that gives no light. Believes stopping all change will end suffering. Imposing, elegant, tragic. Full body, three-quarter pose, misty backdrop. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Background cast</h3>
+<p><strong>Townsfolk lineup</strong><br>
+Split the best ones out with the model sheet prompts below. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A lineup of 8 original background townsfolk for a sunny seaside island town in a 3D creature-collecting RPG: a fisher with a net, an old gardener, a kid with a kite, a baker, a jogger, a dockworker, a musician with a hand drum, a student carrying books. Varied ages, body types and skin tones, full body, standing on one baseline, plain light background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Model sheets for any character</h3>
+<p>Attach the character you picked, then paste one of these.</p>
+<p><strong>Character turnaround sheet</strong><br>
+<em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached character as the exact design reference, create a full-body turnaround sheet for 3D modeling: front, left side, back and three-quarter views, arms relaxed in an A-pose about 45 degrees from the body, feet shoulder-width apart, neutral expression with mouth closed, same scale on one baseline, plain flat light-gray background. Flat even lighting, no shadows, no text. Outfit, colors, hair and proportions identical in every view.
+</code></pre>
+<p><strong>Clean view for 3D Model</strong><br>
+The single image you feed into Higgsfield 3D Model. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached character as the exact reference, render them alone, full body, front view, arms in a relaxed A-pose about 45 degrees from the body, feet shoulder-width apart, neutral expression, nothing in their hands, on a pure white background. Flat even lighting, no shadows. Outfit, colors and proportions identical.
+</code></pre>
+<p><strong>Expression sheet</strong><br>
+Dialogue portraits. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached character as the exact reference, create an expression sheet of six head-and-shoulders portraits in a 3 by 2 grid: neutral, happy, surprised, determined, sad and angry. Same angle, lighting and design in all six, plain background, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Dialogue portrait</strong><br>
+<em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached character as the exact reference, create a waist-up portrait for an in-game dialogue box, three-quarter view facing right, [EXPRESSION] expression, on a plain flat solid background for easy cutout. No text.
+</code></pre>
+<p><strong>Outfit swap</strong><br>
+Seasonal gear, unlockable outfits. <em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached character as the exact reference, keep the face, hair, body and pose identical and change only the outfit to [NEW OUTFIT, e.g. a winter parka with fur hood, thermal leggings and snow boots]. Full body, same camera and lighting. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>4. Relic Arms (weapons)</h2>
+<p>Relic Arms are the trainer's field tools. Each one clears a kind of overworld obstacle, and each has an awakened form tied to its element. The field ability is listed under each.</p>
+<h3>The eight relics</h3>
+<p><strong>Tidecaller Harpoon</strong> (Tide)<br>
+Field ability: raises a water path across sea gaps. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A relic harpoon of coral and bleached driftwood, a spearhead of translucent sea glass with water swirling inside, a rope of braided kelp, brass fittings engraved with wave patterns, a pearl pommel. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Emberfang Glaive</strong> (Flame)<br>
+Field ability: burns away thorn thickets. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A relic glaive with a curved obsidian blade veined with molten orange, a guard shaped like a fan of pangolin scales, a charcoal leather-wrapped shaft, embers drifting off the edge. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Rootwarden Staff</strong> (Verdant)<br>
+Field ability: grows vine bridges. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A living relic staff of twisted gnarled wood, a glowing green seed crystal cradled in roots at the top, small leaves and blossoms growing along the shaft, a moss-wrapped grip. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Skyrend Gauntlet</strong> (Storm)<br>
+Field ability: powers old lifts and machines. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A heavy relic gauntlet of brass and copper, coiled rings around the forearm channeling lightning into the knuckle plates, glowing yellow gauges, a cracked storm-glass core on the back of the hand. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Frostvow Bow</strong> (Frost)<br>
+Field ability: freezes waterfalls so they can be climbed. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">An elegant relic recurve bow carved from pale blue glacier ice that never melts, a glowing silver string, a snowflake sigil at the grip, arrows fletched with frost feathers. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Umbral Crescents</strong> (Umbra)<br>
+Field ability: cuts through shadow veils. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A pair of relic crescent-moon sickles with blades of polished black glass that reflect stars, violet-wrapped grips, joined by a thin silver chain. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Lumen Aegis</strong> (Lumen)<br>
+Field ability: lights dark caves. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A round relic shield of white gold with a sunburst face, a glowing core that projects a translucent dome of light, feather motifs around the rim. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Ironheart Hammer</strong> (Iron)<br>
+Field ability: smashes cracked boulders. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">A massive relic war hammer with an anvil-shaped head, a caged glowing furnace core inside the head, gear-tooth edges, a grip wrapped in red leather. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Villain relic</h3>
+<p><strong>Hollow Lantern Staff</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">The villain leader&#39;s relic staff: tall gray driftwood and tarnished silver, topped with an empty lantern cage of frosted cracked glass pouring cold gray mist, ripple-shaped rings suspended around the head. Prop concept sheet: the weapon in a front view and a side view, plus close-ups of the grip and one signature detail, plain light background, no hands, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Model sheets for any relic</h3>
+<p>Attach the relic you picked.</p>
+<p><strong>Upgrade tiers</strong><br>
+<em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached weapon as the exact reference, show three upgrade tiers side by side at the same angle: a worn basic version, a reinforced version with extra fittings and ornament, and the fully awakened relic glowing with elemental energy. Same core silhouette in all three, plain light background, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Clean view for 3D Model</strong><br>
+<em>Model: Nano Banana Pro, with the chosen design attached as reference</em></p>
+<pre><code class="language-text">Using the attached weapon as the exact reference, show it alone in a straight side view, pure white background, flat even lighting, no shadows, no glow or particle effects. Identical shape and materials.
+</code></pre>
+<h2>5. Capture lanterns and items</h2>
+<p>Bond Lanterns replace the usual capture ball. Icon sheets come out on a flat mint background so you can cut them out.</p>
+<p><strong>Bond Lanterns (5 tiers)</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game prop sheet of five handheld capture devices called Bond Lanterns, each about the size of a softball with a hinged cage and a glowing core, lined up left to right in three-quarter view: a simple dented tin lantern with a warm white glow; a polished brass lantern with blue glass panes; a sea-glass lantern with a rope-wrapped handle and teal glow; a silver filigree lantern with a violet glow; and the rarest, a black iron lantern inlaid with gold constellations around a glowing star core. Plain light background, even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Capture moment</strong><br>
+Look-dev for the capture effect and animation. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">The moment of capture in a 3D creature-collecting RPG: a thrown Bond Lantern hovering in mid-air with its hinged cage open, ribbons of glowing light spiraling from a small wild creature into the lantern, tall grass bending outward, sparkles in the air, the trainer&#39;s silhouette in the foreground. High-angle three-quarter game camera, dynamic and readable. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Healing items</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game item icon sheet, 4 by 3 grid of 12 separate icons: a small corked healing tonic with green liquid, a larger tonic with blue liquid, a full-restore tonic with gold liquid, a feather of revival, a glowing coal in a tiny cage, an antidote vial, a tin of burn salve, a bundle of thawing herbs, a small wake-up bell, a cup of clarity tea, a status-cleansing charm, an energy fruit. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Fruits and treats</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game item icon sheet, 4 by 3 grid of 12 original fantasy fruits and creature treats: a star-shaped sunfruit, a spiral seaberry, a mossy nut, a crackling voltplum, a stone-shelled walnut, a frost pear, a feather-light puff melon, a violet sourbulb, a glowing ghostgrape, a copper fig, a prism cherry, a dusk plum. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Evolution crystals</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game item icon sheet, 4 by 3 grid of 12 resonance crystals used to trigger evolution, one per element: ember-red with fire inside, blue with a wave inside, green with a sprout inside, yellow crackling with sparks, brown banded agate, pale blue ice, mint with a swirl, purple with bubbles, rose with a wisp, gunmetal with a gear, gold radiating light, indigo with a crescent moon. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Technique scrolls</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game item icon sheet, 4 by 3 grid showing the same sealed technique scroll with a wax seal in 12 color variants: ember red, ocean blue, leaf green, electric yellow, earth brown, ice blue, mint, violet, rose, steel gray, gold, deep indigo. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Key items</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game item icon sheet, 4 by 2 grid of 8 key items: a handheld field codex device of leather and brass with a glowing screen, a folding fishing rod, a canvas glider pack, a rolled sea chart, a bell for calling a ride creature, a lantern belt, a camp kit, a ferry ticket. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Trial emblems (badges)</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Eight trial emblems awarded by the Wardens, each a small enamel-and-metal pin built around its element: a hexagonal crystal (stone), a leaf (verdant), a wave crest (tide), a lightning bolt in a ring (storm), a hammer and ember (flame), a snowflake shield (frost), a bell with ribbons (spirit), a crescent and star (umbra). Arranged in a 4 by 2 grid inside a velvet-lined wooden case, top-down view, soft even light, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>6. World</h2>
+<p>Overworld prompts use a high-angle three-quarter camera to match an elevated third-person view. Battle stages use a lower camera behind the player's creature.</p>
+<h3>Towns and routes</h3>
+<p><strong>Brightcove (starter town)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a small seaside starter town of whitewashed cottages with blue and terracotta roofs, the player&#39;s home, a research lab with a glass dome, a healing center marked by a large lantern sign, a tiny harbor with fishing boats, flower boxes, cobblestone lanes leading out to tall grass at the edge of town. Morning light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Windmill Meadows (route 1)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a gentle first route of rolling meadows, patches of tall encounter grass, a dirt path with a few one-way ledges, a wooden windmill, a berry bush, a small pond, a trainer standing on a hill, wildflowers everywhere. Bright afternoon light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Whisperwood (forest)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a dense old forest with huge mossy trunks, shafts of green light through the canopy, glowing mushrooms, a hollow-log tunnel, a thorn thicket blocking a side path, rope bridges between roots, tall grass in clearings. Dappled soft light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Coralrim Coast</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: white sand beaches and turquoise shallows, coral reefs visible under clear water, sea stacks and arches, a wooden boardwalk with a surf shack, tide pools, a sea gap that needs a water path to cross. Bright midday sun. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Rivetport (industrial port)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a busy port town of red brick warehouses, iron cranes, steam pipes, cargo containers, rail tracks, a giant clock tower, a trial arena built inside an old foundry. Warm late-afternoon light and drifting steam. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Harborcrest (capital city)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a grand capital built on terraced cliffs above the sea, white stone and blue-tiled roofs, market plazas with colorful awnings, canals with small boats, a lighthouse, and a huge open-air championship stadium at the top of the city. Golden-hour light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Biomes and dungeons</h3>
+<p><strong>Cinder Isle (volcano)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a volcanic island of black rock and cooling lava rivers crossed by stone bridges, steam vents, hardy red plants, a hot-spring village built into the crater rim, a forge-style trial arena glowing orange. Dramatic warm light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Frostspire (snow peak)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a snowy mountain pass with frozen waterfalls, ice caves, pine trees heavy with snow, a mountain lodge with glowing windows, slippery ice-floor puzzles, a trial arena carved into the glacier. Cool crisp light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Mirefen Marsh</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a misty swamp of boardwalks over murky green water, giant lily pads, twisted mangrove roots, bubbling purple pools, stilt houses with lanterns, fireflies. Hazy teal and violet light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Thunderstep Plateau</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a high windswept plateau with rock mesas, tall wind turbines, crackling storm clouds overhead, metal lightning rods, a kite-launch platform, patches of wind-bent grass. Moody storm light with bright flashes. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Hushvale Ruins</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: ancient overgrown temple ruins on a hilltop, broken arches, a giant bronze bell hanging in a stone tower, prayer ribbons tied to trees, floating ghostly motes, stairs cut into the hillside. Soft dusk light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Geode Caverns</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: an underground cave network with giant glowing crystal clusters, underground rivers, wooden mine scaffolding, cracked boulders blocking tunnels, dark areas that need a light source. Cool crystal glow. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Stillwater Spire (villain base)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a sleek gray monolith tower rising from a perfectly flat, mirror-still lagoon, silver walkways, cold white lights, gray banners with a flat-line-in-a-circle emblem, patrolling guards, an eerie lack of waves. Overcast silver light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>The Drowned Sanctum (legendary shrine)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a sunken temple half-flooded with glowing seawater, carved whale-serpent murals on the walls, a circular altar on an island in the middle, shafts of light from openings above, coral growing over old stone. Reverent, mysterious light. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden trial arena (template)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Overworld environment concept for a 3D creature-collecting RPG, high-angle three-quarter camera about 50 degrees above the ground: a trial arena for the [ELEMENT] Warden, themed around [THEME, e.g. an old foundry with molten channels], a raised circular battle floor, a short puzzle path leading to it, spectator stands, banners in [ELEMENT COLOR]. Clear walkable paths, readable shapes. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Interiors</h3>
+<p><strong>Player's room</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Interior concept for a 3D creature-collecting RPG, high-angle three-quarter cutaway view with the front wall removed like a dollhouse: a sunny attic bedroom in a seaside cottage: bed with a quilt, a desk with a computer and maps, shelves of adventure books and creature figurines, a window looking out to the sea, a backpack by the door. Cozy, readable, clear walkable floor space. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Hearth House (healing center)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Interior concept for a 3D creature-collecting RPG, high-angle three-quarter cutaway view with the front wall removed like a dollhouse: a warm creature healing center: a front counter with a large lantern-shaped healing machine, cushioned waiting benches, potted plants, a storage terminal in the corner, a small shop counter, warm lantern light. Cozy, readable, clear walkable floor space. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Archivist's lab</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Interior concept for a 3D creature-collecting RPG, high-angle three-quarter cutaway view with the front wall removed like a dollhouse: a cluttered research lab under a glass dome: creature specimens in glowing jars, maps and sketches pinned to the walls, a big central table holding three capture lanterns, telescopes, stacks of books, plants everywhere. Cozy, readable, clear walkable floor space. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Shop</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Interior concept for a 3D creature-collecting RPG, high-angle three-quarter cutaway view with the front wall removed like a dollhouse: a cozy general store with wooden shelves of tonics and lanterns, hanging dried herbs, a checkout counter with a brass register, barrels of fruit, a chalkboard sign without readable text. Cozy, readable, clear walkable floor space. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Battle stages</h3>
+<p>Lower camera, behind the player's creature.</p>
+<p><strong>Battle stage: meadow</strong><br>
+Sets the battle camera and composition. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Battle scene layout for a 3D creature-collecting RPG: two round battle platforms of trampled grass facing each other in an open meadow, the player&#39;s creature seen from behind on the near-left platform, a wild creature on the far-right platform, soft depth of field on the background hills, low third-person camera behind the player&#39;s side. Bright daylight. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Battle stage (template)</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Battle stage background for a 3D creature-collecting RPG set in [BIOME, e.g. a volcanic crater with lava rivers], two round battle platforms facing each other, empty of creatures, low third-person camera from behind the near platform, soft depth of field on the background. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Sky and map</h3>
+<p><strong>Skybox moods</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Four sky panoramas for a stylized 3D game shown as four wide horizontal panels stacked vertically: bright morning with soft cumulus clouds, golden sunset with pink and orange clouds, clear starry night with a big moon, dark storm with lightning. Painterly, no ground, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>World map</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Illustrated world map of an original island archipelago for a 3D creature-collecting RPG, seen from above: eight islands with distinct biomes (seaside meadows, dense forest, tropical coast, volcanic island, snowy peak, misty marsh, stormy plateau, ancient ruins), a capital city on terraced cliffs, sea routes marked with dotted lines, tiny landmarks, a compass rose, turquoise sea. Hand-painted, no text labels. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>7. Props and textures</h2>
+<p>Textures skip the style suffix on purpose: they need flat light with no baked shadows so your in-engine toon shader does the shading.</p>
+<h3>Prop kits</h3>
+<p><strong>Overworld prop kit</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game prop sheet for a stylized 3D overworld, each prop isolated and evenly spaced on a plain light background in three-quarter view: three kinds of rounded trees, two bushes, a patch of tall encounter grass, three rocks, a wooden fence segment and corner, a signpost, a lamp post, a crate, a barrel, a bench, a mailbox, a flower bed, a one-way grass ledge. Even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Town building kit</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Modular building kit for a seaside town in a stylized 3D game, pieces isolated on a plain light background in three-quarter view: whitewashed wall sections, a door, two window styles, a blue roof section, a terracotta roof section, a chimney, a balcony, an awning, stone steps, a market stall. Even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Field obstacles</strong><br>
+Pairs with the Relic Arms field abilities. <em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game prop sheet of overworld obstacles for a creature-collecting RPG, isolated on a plain light background: a cracked boulder, a wall of thorn vines, a gap in a cliff edge, a frozen waterfall, a shadowy veil across a doorway, an old rusted lift platform, a dark cave mouth, a sea gap with rocks. Three-quarter view, even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Interactables</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game prop sheet of interactable objects for a creature-collecting RPG, isolated on a plain light background: a small glowing satchel lying on the ground as an item pickup, a hidden sparkle spot in grass, a creature storage shrine terminal, a healing lantern machine, a notice board, a treasure chest, a fishing spot with ripples, a campfire. Three-quarter view, even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Biome prop kit (template)</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game prop sheet for the [BIOME, e.g. volcanic island] biome of a stylized 3D overworld, 12 props isolated and evenly spaced on a plain light background in three-quarter view: [LIST PROPS, e.g. black rock pillars, lava-crust stepping stones, a steam vent, red heat-loving plants, a charred tree, an obsidian crystal cluster]. Even lighting, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Tileable textures</h3>
+<p><strong>Grass</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Short, lush stylized grass with small clover patches and a few tiny flowers, bright green. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Dirt path</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Packed dirt path with small pebbles and light wheel ruts, warm brown. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Cobblestone</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Rounded cobblestones in warm gray and sand tones with thin mossy gaps. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Beach sand</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Soft beach sand with tiny shells and gentle ripple patterns, pale golden. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Shallow water</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Clear turquoise shallow water surface with soft caustic light patterns and small ripples. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Cliff rock</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Layered cliff rock face with chunky stylized strata, warm gray and ochre. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Wood planks</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Weathered wooden boardwalk planks with visible grain and iron nails, warm brown. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Roof tiles</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Overlapping clay roof tiles, rounded, in a soft blue glaze. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Snow</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Fresh packed snow with soft footprint-like dimples and blue shadows in the dips. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Cooled lava</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Cooled black lava crust with glowing orange cracks between plates. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Marsh mud</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Wet dark marsh mud with small puddles, moss clumps and twigs, murky green-brown. Seamless tileable texture filling the whole square frame edge to edge, top-down orthographic view, stylized hand-painted look, flat even lighting with no baked shadows or highlights, no objects, no text.
+</code></pre>
+<p><strong>Grass blade cards</strong><br>
+For the swaying tall-grass encounter patches. <em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Stylized grass blades and small wildflower clumps arranged in neat rows, bright green shapes on a pure black background for alpha cutout cards, flat even lighting, no shadows, no text.
+</code></pre>
+<h2>8. Interface</h2>
+<p>Mockups set the direction. Rebuild every panel and all text in-engine; text inside a generated image is never production-ready.</p>
+<p><strong>Title screen</strong><br>
+Leaves room for the logo. <em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Title screen key art for an original 3D creature-collecting RPG: the three starter creatures (an ember pangolin, a narwhal pup in a water bubble, a moss-furred capybara) sitting on a grassy cliff at sunrise, looking out over an island archipelago, a huge sea-serpent guardian silhouette in the distant water, empty sky space in the upper third for the logo. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Logo</strong><br>
+Direction only. Redraw it as vector before you use it. <em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game logo wordmark reading &#34;WILDTIDE&#34; in chunky rounded letters with a wave curling through the W and a small glowing lantern dotting the I, deep navy letters with a sea-foam outline and gold highlights, centered on a plain white background.
+</code></pre>
+<p><strong>Overworld HUD</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Overworld HUD mockup for a 3D creature-collecting RPG: a small minimap in the top right, party creature icons with health bars in the top left, a quest tracker below it, action button prompts in the bottom right, over a sunny meadow gameplay view. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Battle screen</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Battle screen mockup for a 3D creature-collecting RPG: the player&#39;s creature seen from behind on the left, the opponent on the right, name plates with level and health bars for both, a four-move menu with element-colored buttons in the bottom right, a command bar with Fight, Bag, Team and Run. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Party screen</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Party screen mockup for a 3D creature-collecting RPG: six creature slots in a two-column grid, each with an icon, name, level, health bar and element chips, one slot highlighted. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Codex entry</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Creature codex page mockup for a 3D creature-collecting RPG: a large creature render on the left on a turntable, on the right its number, name, element chips, height, weight, a short description and a small habitat map, styled like a field journal on a tablet. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Bag menu</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Inventory bag menu mockup for a 3D creature-collecting RPG: tabs for Healing, Lanterns, Fruits, Key Items and Scrolls along the top, a scrolling item list with icons and counts, a selected item detail card on the right. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Dialogue box</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Dialogue box mockup for a 3D creature-collecting RPG: a rounded speech panel along the bottom of the screen, a character portrait on the left, a name tag above the panel, a small bouncing arrow in the corner, over a town scene. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Map screen</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">World map screen mockup for a 3D creature-collecting RPG: an illustrated archipelago map with island icons, a player marker, discovered and undiscovered areas, a side panel listing locations. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Element icons</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game icon sheet, 4 by 3 grid of 12 circular element emblems, each with a simple bold symbol on a colored disc: flame on red-orange, water drop on blue, leaf on green, lightning bolt on yellow, rock on brown, snowflake on pale blue, wind swirl on mint, toxic bubble on purple, ghostly wisp on rose, gear on steel gray, sunburst on gold, crescent moon on deep indigo. Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Status icons</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game icon sheet, 3 by 2 grid of 6 small status condition badges: burned (flame), frozen (ice cube), poisoned (purple droplet), paralyzed (zigzag spark), asleep (crescent with Z-shaped swirls), confused (spiral). Stylized hand-painted game icons with chunky readable shapes and a soft dark outline, bright even lighting, each icon centered in its own cell on a plain flat mint-green background for easy cutout, no text.
+</code></pre>
+<p><strong>Buttons and panels kit</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">UI kit sheet for a 3D creature-collecting RPG laid out on a plain background: primary and secondary buttons in normal, hover and pressed states, a rounded panel frame, a tab bar, a health bar, an experience bar, a checkbox, a toggle, a slider, a tooltip bubble. Friendly stylized game interface, chunky rounded panels with soft cel-shaded depth, deep navy and sea-foam colors with warm gold highlights, clean readable layout, placeholder text, 16:9 screen.
+</code></pre>
+<p><strong>Loading screen</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Loading screen illustration for a 3D creature-collecting RPG: a small moss-furred capybara creature napping on a floating lantern that drifts over a calm moonlit sea, stars reflected in the water, lots of empty space along the bottom for a loading bar and tips. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h2>9. Effects</h2>
+<p>Look-dev targets for your particle systems, plus particle sprites you can use directly. Frame-by-frame flipbooks rarely stay consistent in AI generation, so build the motion in-engine.</p>
+<h3>Move effects by element</h3>
+<p><strong>Flame moves</strong> (Flame)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Flame-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from swirling fire, ember sparks, heat shimmer, molten droplets. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Tide moves</strong> (Tide)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Tide-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from curling waves, water ribbons, foam, bubbles. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Verdant moves</strong> (Verdant)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Verdant-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from whirling leaves, vines, petals, pollen motes. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Storm moves</strong> (Storm)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Storm-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from forked lightning, electric arcs, static sparks, charged cloud puffs. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Stone moves</strong> (Stone)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Stone-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from rock chunks, crystal shards, dust clouds, cracked ground. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Frost moves</strong> (Frost)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Frost-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from ice shards, snowflakes, frost crystals, cold mist. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Gale moves</strong> (Gale)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Gale-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from spiraling wind streaks, air slashes, drifting feathers. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Venom moves</strong> (Venom)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Venom-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from toxic bubbles, acid splashes, purple smoke, dripping slime. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Spirit moves</strong> (Spirit)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Spirit-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from ghostly wisps, glowing ribbons, echo rings, drifting motes. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Iron moves</strong> (Iron)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Iron-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from metal shards, gear shapes, hot sparks, steam bursts. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Lumen moves</strong> (Lumen)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Lumen-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from radiant beams, prism refractions, halo rings, sparkles. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<p><strong>Umbra moves</strong> (Umbra)<br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for Umbra-element creature attacks in a stylized 3D RPG, four separate effects in a 2 by 2 grid: a projectile in flight, an impact burst, a ground area effect, and a glowing power-up aura. Built from inky shadow tendrils, dark smoke, crescent slashes, violet sparks. Stylized hand-painted shapes, strong readable silhouettes, bright cores fading to soft edges, on a plain pure black background, no characters, no text.
+</code></pre>
+<h3>Moments and sprites</h3>
+<p><strong>Key moment effects</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Game VFX concept sheet for a stylized 3D creature-collecting RPG, five separate effects in a row on a plain pure black background: a capture burst of light ribbons closing into a lantern, an evolution cocoon of white light with a spiral, a level-up ring of rising sparkles, a critical-hit star flash, a rare-creature shimmer of silver sparkles. Stylized hand-painted shapes, no characters, no text.
+</code></pre>
+<p><strong>Particle sprite sheet</strong><br>
+Use directly as particle textures. <em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">Particle sprite sheet for a stylized game engine: 16 separate particle textures in a 4 by 4 grid on a pure black background: two smoke puffs, sparks, an ember, a water droplet, a splash, a leaf, a petal, a snowflake, an ice shard, a rock chip, a lightning bolt, a star, a soft glow orb, a ring, a bubble. White and light gray shapes with soft edges for tinting in-engine, each centered in its cell, no text.
+</code></pre>
+<h2>10. Video</h2>
+<p>Trailer shots, cinematics and animation reference. For image-to-video, attach your finished concept art or an in-engine render as the first frame.</p>
+<h3>Cinematics and trailer</h3>
+<p><strong>Title screen loop</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Slow, seamless 8-second loop: three small creatures sit on a grassy cliff at sunrise overlooking an island archipelago, grass swaying gently, clouds drifting, the sea sparkling, a huge sea-serpent silhouette slowly surfacing and sinking far away. Locked-off wide camera, calm and hopeful. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Opening: the guardian rises</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Cinematic opening shot: aerial drone flight over a turquoise archipelago at dawn, the camera glides low over the waves toward a colossal sea creature carrying ruins and a forest on its back as it rises from the ocean, water pouring off its fins, seabirds scattering. Slow push-in, epic scale. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Starter reveal</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Warm cinematic shot inside a cluttered research lab: three glowing capture lanterns on a wooden table open one by one, releasing a baby ember pangolin, a narwhal pup in a water bubble, and a moss-furred capybara, each reacting with personality. Slow dolly along the table, soft sunlight through a glass dome. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Evolution sequence</strong><br>
+Set stage 1 as the start frame and stage 2 as the end frame. <em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">The creature in the first frame glows white, a spiral of light wraps around it, its silhouette grows and reshapes, then a burst of light reveals its evolved form from the last frame, which strikes a proud pose. Slow orbit camera, sparkles, dramatic but short. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Capture moment</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">A trainer throws a brass lantern that opens mid-air, ribbons of light pull a small wild creature inside, the lantern drops into the tall grass, wobbles three times, then clicks shut with a burst of sparkles. Low tracking camera following the lantern. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Legendary awakening</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Night over a frozen lake under a full moon: the ice cracks, stardust rises, and a vast moth-dragon with constellation-patterned wings unfolds and lifts into the sky, wings glowing. Slow crane shot rising with it, awe and quiet menace. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Villain reveal</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">A still gray lagoon so flat it mirrors the sky; a silver monolith tower stands in the middle; masked figures in slate coats walk in formation along a walkway; the leader turns slowly holding a staff with an empty lantern. Slow push-in, cold silver light, unsettling calm. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Warden trial entrance</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">A challenger walks into a foundry-themed trial arena, molten channels light up along the floor one after another, the Warden slams a glowing hammer down and sparks shower the room. Low wide tracking shot, dramatic warm light. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Trailer: island flyover</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Fast, joyful drone flyover of an island archipelago: meadows with windmills, a dense forest canopy, a volcano smoking in the distance, a snowy peak, a busy harbor city, creatures running and flying below. Quick FPV-style sweeps, bright daylight. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Trailer: battle shot</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">Dynamic battle shot: an armored narwhal in a ring of ocean water fires a spiraling water blast across a meadow arena at an ember pangolin warrior, which blocks with a fan of fiery scales, steam exploding where they meet. Orbiting camera, slow motion at impact. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<h3>Animation reference</h3>
+<p>Plain background, locked camera, so animators can study the motion.</p>
+<p><strong>Idle reference</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">The creature in the attached image idles in place: slow breathing, blinking, a small tail flick, glancing left and right. Locked-off camera, plain light background, 5 seconds, loopable.
+</code></pre>
+<p><strong>Walk and run reference</strong><br>
+<em>Model: Kling 3.0, Seedance 2.5 or Veo 3.1</em></p>
+<pre><code class="language-text">The creature in the attached image walks from left to right across a plain light background, then breaks into a run. Side-on locked camera, full body always in frame, consistent design.
+</code></pre>
+<h2>11. Marketing</h2>
+<p>Store art, app icon and a teaser.</p>
+<p><strong>Store key art</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Store key art for an original 3D creature-collecting RPG: the two player characters stand on a cliff with the three starter creatures, the rival watching from a rock, the villain leader&#39;s silhouette in the clouds, and a colossal sea guardian rising behind them over a sunset archipelago. Vertical composition with empty space at the top for the logo. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>App icon</strong><br>
+<em>Model: Nano Banana Pro</em></p>
+<pre><code class="language-text">App icon for a creature-collecting game: a glowing brass capture lantern with a tiny narwhal pup peeking out, on a deep navy rounded-square background with a sea-foam wave curl. Bold, simple, readable at small size, no text. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+<p><strong>Social teaser</strong><br>
+<em>Model: Nano Banana Pro or Soul 2.0, with your golden reference attached</em></p>
+<pre><code class="language-text">Mysterious teaser image: tall grass at night lit by a single glowing lantern, and just beyond the light a pair of large curious eyes peeking out from the dark. Low camera at grass height, square format. Stylized 3D game art, soft cel-shading over hand-painted textures, chunky readable silhouettes, rounded appealing proportions, saturated harmonious colors, warm key light with cool rim light, soft ambient occlusion, high detail. No text, no logos, no watermark.
+</code></pre>
+
+</body></html>
